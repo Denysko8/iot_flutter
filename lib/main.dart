@@ -44,7 +44,7 @@ class _MyHomePageState extends State<MyHomePage> {
       }
 
       // 2. Спеціальна обробка секретного тексту
-      if (cleanValue == 'go away!') {
+      if (cleanValue == 'heisenberg') {
         _counter += 7;
         _controller.clear();
         return;
