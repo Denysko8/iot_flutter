@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:iot_flutter/models/auto_mode_settings.dart';
 import 'package:iot_flutter/screens/profile_screen.dart';
 import 'package:iot_flutter/widgets/auto_mode_controls.dart';
 import 'package:iot_flutter/widgets/manual_mode_controls.dart';
@@ -15,16 +16,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   double _sliderValue = 50;
   bool _isAutoMode = false;
-  bool _wakeBeforeSunrise = false;
-  bool _wakeAtSunriseTime = true;
-  TimeOfDay _wakeTime = const TimeOfDay(hour: 7, minute: 0);
-  int _wakeMinutesBefore = 15;
-  bool _temperatureControlEnabled = false;
-  double _temperatureThreshold = 25;
-  double _temperatureClosurePercent = 80;
-  bool _weatherControlEnabled = false;
-  Set<String> _selectedWeathers = {};
-  double _weatherClosurePercent = 60;
+  AutoModeSettings _autoSettings = AutoModeSettings();
 
   void _toggleMode() {
     setState(() {
@@ -80,66 +72,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   )
                 else
                   AutoModeControls(
-                    wakeBeforeSunrise: _wakeBeforeSunrise,
-                    onWakeBeforeSunriseChanged: (value) {
+                    settings: _autoSettings,
+                    onChanged: (value) {
                       setState(() {
-                        _wakeBeforeSunrise = value;
+                        _autoSettings = value;
                       });
                     },
-                    wakeAtSunriseTime: _wakeAtSunriseTime,
-                    onWakeAtSunriseTimeChanged: (value) {
-                      setState(() {
-                        _wakeAtSunriseTime = value;
-                      });
-                    },
-                    wakeTime: _wakeTime,
-                    onWakeTimeChanged: (value) {
-                      setState(() {
-                        _wakeTime = value;
-                      });
-                    },
-                    wakeMinutesBefore: _wakeMinutesBefore,
-                    onWakeMinutesBeforeChanged: (value) {
-                      setState(() {
-                        _wakeMinutesBefore = value;
-                      });
-                    },
-                    temperatureControlEnabled: _temperatureControlEnabled,
-                    onTemperatureControlEnabledChanged: (value) {
-                      setState(() {
-                        _temperatureControlEnabled = value;
-                      });
-                    },
-                    temperatureThreshold: _temperatureThreshold,
-                    onTemperatureThresholdChanged: (value) {
-                      setState(() {
-                        _temperatureThreshold = value;
-                      });
-                    },
-                    temperatureClosurePercent: _temperatureClosurePercent,
-                    onTemperatureClosurePercentChanged: (value) {
-                      setState(() {
-                        _temperatureClosurePercent = value;
-                      });
-                    },
-                    weatherControlEnabled: _weatherControlEnabled,
-                    onWeatherControlEnabledChanged: (value) {
-                      setState(() {
-                        _weatherControlEnabled = value;
-                      });
-                    },
-                    selectedWeathers: _selectedWeathers,
-                    onWeathersChanged: (value) {
-                      setState(() {
-                        _selectedWeathers = value;
-                      });
-                    },
-                    weatherClosurePercent: _weatherClosurePercent,
-                    onWeatherClosurePercentChanged: (value) {
-                      setState(() {
-                        _weatherClosurePercent = value;
-                      });
-                    },
+                    parentActive: _isAutoMode,
                   ),
                 const SizedBox(height: 32),
               ],
