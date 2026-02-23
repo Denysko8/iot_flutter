@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:iot_flutter/screens/login_screen.dart';
+import 'package:iot_flutter/services/service_locator.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Ініціалізуємо всі залежності
+  await ServiceLocator().initialize();
+
   runApp(const MyApp());
 }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:iot_flutter/screens/home_screen.dart';
 import 'package:iot_flutter/screens/register_screen.dart';
+import 'package:iot_flutter/services/service_locator.dart';
 import 'package:iot_flutter/widgets/custom_button.dart';
 import 'package:iot_flutter/widgets/custom_text_field.dart';
 import 'package:iot_flutter/widgets/responsive_padding.dart';
@@ -15,6 +16,8 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _isLoading = false;
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -23,11 +26,43 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _handleLogin() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute<void>(builder: (context) => const HomeScreen()),
-    );
+  void _handleLogin() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final userUseCase = ServiceLocator().userUseCase;
+      final result = await userUseCase.loginUser(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+
+      if (!mounted) return;
+
+      if (result.success) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute<void>(builder: (context) => const HomeScreen()),
+        );
+      } else {
+        setState(() {
+          _errorMessage = result.errorMessage;
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = 'Сталася помилка при логуванні';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   void _navigateToRegister() {
@@ -63,6 +98,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     label: 'Email',
                     icon: Icons.email,
                     keyboardType: TextInputType.emailAddress,
+                    enabled: !_isLoading,
                   ),
                   const SizedBox(height: 16),
                   CustomTextField(
@@ -70,15 +106,31 @@ class _LoginScreenState extends State<LoginScreen> {
                     label: 'Password',
                     icon: Icons.lock,
                     isPassword: true,
+                    enabled: !_isLoading,
                   ),
+                  if (_errorMessage != null) ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.red.shade400),
+                      ),
+                      child: Text(
+                        _errorMessage!,
+                        style: TextStyle(color: Colors.red.shade900),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 32),
                   CustomButton(
-                    text: 'Login',
-                    onPressed: _handleLogin,
+                    text: _isLoading ? 'Завантаження...' : 'Login',
+                    onPressed: _isLoading ? null : _handleLogin,
                   ),
                   const SizedBox(height: 16),
                   TextButton(
-                    onPressed: _navigateToRegister,
+                    onPressed: _isLoading ? null : _navigateToRegister,
                     child: const Text('Don\'t have an account? Register'),
                   ),
                 ],

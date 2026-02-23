@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:iot_flutter/screens/login_screen.dart';
+import 'package:iot_flutter/screens/profile_controller.dart';
+import 'package:iot_flutter/screens/profile_layout.dart';
 import 'package:iot_flutter/widgets/custom_button.dart';
-import 'package:iot_flutter/widgets/location_button.dart';
-import 'package:iot_flutter/widgets/profile_info_tile.dart';
-import 'package:iot_flutter/widgets/responsive_padding.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -13,16 +12,102 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  String? _location;
+  late ProfileController _controller;
+  late TextEditingController _nameController;
+  late TextEditingController _emailController;
 
-  void _handleLocationRequest() {
-    // Placeholder for location access logic
+  @override
+  void initState() {
+    super.initState();
+    _controller = ProfileController();
+    _nameController = TextEditingController();
+    _emailController = TextEditingController();
+    _loadUser();
+  }
+
+  Future<void> _loadUser() async {
+    await _controller.loadUser();
+    if (!mounted) return;
+
     setState(() {
-      _location = 'Kyiv, Ukraine';
+      if (_controller.currentUser != null) {
+        _nameController.text = _controller.currentUser!.name;
+        _emailController.text = _controller.currentUser!.email;
+      }
     });
   }
 
-  void _handleLogout(BuildContext context) {
+  void _toggleEditMode() {
+    setState(() {
+      _controller.toggleEditMode();
+    });
+  }
+
+  void _handleSaveChanges() async {
+    final success = await _controller.saveChanges(
+      _nameController.text.trim(),
+      _emailController.text.trim(),
+    );
+
+    if (!mounted) return;
+
+    if (success) {
+      setState(() {
+        _nameController.text = _controller.currentUser!.name;
+        _emailController.text = _controller.currentUser!.email;
+      });
+
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted) {
+          setState(() {
+            _controller.clearSuccessMessage();
+          });
+        }
+      });
+    }
+
+    setState(() {});
+  }
+
+  void _handleDeleteAccount() async {
+    final navContext = context;
+    final confirmed = await showDialog<bool>(
+      context: navContext,
+      builder: (context) => AlertDialog(
+        title: const Text('Видалити акаунт'),
+        content: const Text(
+          'Ви впевнені, що хочете видалити акаунт? '
+          'Цю дію неможливо буде скасувати.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Скасувати'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Видалити', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      final success = await _controller.deleteAccount();
+      if (success && mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute<void>(builder: (context) => const LoginScreen()),
+          (route) => false,
+        );
+      }
+    }
+  }
+
+  void _handleLogout() async {
+    await _controller.logout();
+    if (!mounted) return;
+
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute<void>(builder: (context) => const LoginScreen()),
@@ -32,62 +117,52 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profile'),
-      ),
-      body: SafeArea(
-        child: ResponsivePadding(
+    if (_controller.isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_controller.currentUser == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Profile')),
+        body: Center(
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const SizedBox(height: 32),
-              CircleAvatar(
-                radius: 60,
-                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                child: Icon(
-                  Icons.person,
-                  size: 64,
-                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+              const Text('Користувач не авторизований'),
+              const SizedBox(height: 16),
+              CustomButton(
+                text: 'Go to Login',
+                onPressed: () => Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (context) => const LoginScreen(),
+                  ),
+                  (route) => false,
                 ),
               ),
-              const SizedBox(height: 24),
-              Text(
-                'John Doe',
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'john.doe@example.com',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[600],
-                    ),
-              ),
-              const SizedBox(height: 32),
-              LocationButton(
-                location: _location,
-                onRequestLocation: _handleLocationRequest,
-              ),
-              const ProfileInfoTile(
-                icon: Icons.schedule,
-                title: 'Active Schedules',
-                value: '2 schedules',
-              ),
-              const ProfileInfoTile(
-                icon: Icons.notifications,
-                title: 'Notifications',
-                value: 'Enabled',
-              ),
-              const Spacer(),
-              CustomButton(
-                text: 'Logout',
-                onPressed: () => _handleLogout(context),
-                isPrimary: false,
-              ),
-              const SizedBox(height: 24),
             ],
           ),
         ),
-      ),
+      );
+    }
+
+    return ProfileLayout(
+      controller: _controller,
+      nameController: _nameController,
+      emailController: _emailController,
+      onToggleEdit: _toggleEditMode,
+      onSaveChanges: _handleSaveChanges,
+      onLogout: _handleLogout,
+      onDeleteAccount: _handleDeleteAccount,
     );
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    super.dispose();
   }
 }
