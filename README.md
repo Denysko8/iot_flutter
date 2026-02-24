@@ -39,13 +39,6 @@ flutter run
 flutter test
 ```
 
-## 📚 Документація
-
-- **[QUICKSTART.md](QUICKSTART.md)** - Швидкий старт за 1 хвилину
-- **[ARCHITECTURE.md](ARCHITECTURE.md)** - Детальна архітектура
-- **[USAGE_EXAMPLES.md](USAGE_EXAMPLES.md)** - Приклади коду
-- **[IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md)** - Реалізовано/не реалізовано
-
 ## 🔐 Користувацький потік
 
 ### Реєстрація
@@ -101,54 +94,7 @@ flutter test
 # Запустити конкретний файл
 flutter test test/validators_test.dart
 
-# З покриттям
-flutter test --coverage
 ```
-
-## 🔧 Розширення
-
-Архітектура дозволяє легко додавати нові функції:
-
-```dart
-// 1. Додайте метод в UserRepository
-abstract class UserRepository {
-  Future<bool> myNewFeature(String param);
-}
-
-// 2. Реалізуйте в UserRepositoryImpl
-@override
-Future<bool> myNewFeature(String param) async {
-  // реалізація
-}
-
-// 3. Додайте в UserUseCase
-Future<RegistrationResult> myNewFeature(String param) async {
-  // логіка
-}
-
-// 4. Використайте в UI
-final result = await userUseCase.myNewFeature(param);
-```
-
-## 🚀 Міграція на API
-
-Коли потрібно перейти з SharedPreferences на API:
-
-1. Створіть `UserRepositoryApiImpl` implements `UserRepository`
-2. Реалізуйте всі методи з HTTP запитами
-3. Оновіть `ServiceLocator`
-4. ✨ Всі UI екрани залишаться незмінними!
-
-## ⚠️ Важливо
-
-Це проект для **навчальних цілей**. Для production потрібно:
-
-- ❌ Хешувати паролі (використовувати bcrypt)
-- ❌ Шифрувати чутливі дані (flutter_secure_storage)
-- ❌ Використовувати HTTPS
-- ❌ Валідувати на бекенді
-- ❌ Додати таймаут сесії
-- ❌ Реалізувати 2FA
 
 ## 📦 Залежності
 
@@ -192,13 +138,6 @@ if (result.success) {
 final currentUser = await userUseCase.getCurrentUser();
 ```
 
-## 🎓 Навчальні матеріали
-
-- Clean Architecture в Flutter
-- SOLID принципи
-- Dependency Injection
-- Unit Testing
-- Validation Best Practices
 
 ## 👨‍💻 Технічні деталі
 
@@ -209,16 +148,5 @@ final currentUser = await userUseCase.getCurrentUser();
 - **Storage**: SharedPreferences
 - **Pattern**: Repository, UseCase, Validator
 
-## 📄 Ліцензія
 
-MIT License
 
-## 🤝 Сприяння
-
-Проект відкритий для внесків та покращень!
-
----
-
-**Версія:** 1.0.0  
-**Дата**: 2024-02-24  
-**Статус**: ✅ Готово до розроблення
