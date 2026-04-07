@@ -7,11 +7,13 @@ import 'package:iot_flutter/widgets/weather_control.dart';
 class AutoModeControls extends StatelessWidget {
   final AutoModeSettings settings;
   final ValueChanged<AutoModeSettings> onChanged;
+  final VoidCallback? onSave;
   final bool parentActive;
 
   const AutoModeControls({
     required this.settings,
     required this.onChanged,
+    this.onSave,
     this.parentActive = true,
     super.key,
   });
@@ -22,6 +24,7 @@ class AutoModeControls extends StatelessWidget {
       wakeAtSunriseTime: settings.wakeAtSunriseTime,
       wakeTime: settings.wakeTime,
       wakeMinutesBefore: settings.wakeMinutesBefore,
+      wakeyOpenPercent: settings.wakeyOpenPercent,
       temperatureControlEnabled: settings.temperatureControlEnabled,
       temperatureThreshold: settings.temperatureThreshold,
       temperatureClosurePercent: settings.temperatureClosurePercent,
@@ -39,7 +42,15 @@ class AutoModeControls extends StatelessWidget {
       children: [
         WakeySettings(
           enabled: settings.wakeBeforeSunrise,
-          onEnabledChanged: (v) => _update((s) => s.wakeBeforeSunrise = v),
+          onEnabledChanged: (v) {
+            _update((s) {
+              s.wakeBeforeSunrise = v;
+              // Якщо вимикаємо головний switch, також вимкнути "At dawn"
+              if (!v) {
+                s.wakeAtSunriseTime = false;
+              }
+            });
+          },
           atSunrise: settings.wakeAtSunriseTime,
           onAtSunriseChanged: (v) =>
               _update((s) => s.wakeAtSunriseTime = v),
@@ -48,6 +59,9 @@ class AutoModeControls extends StatelessWidget {
           minutesBefore: settings.wakeMinutesBefore,
           onMinutesBeforeChanged: (m) =>
               _update((s) => s.wakeMinutesBefore = m),
+          openPercent: settings.wakeyOpenPercent,
+          onOpenPercentChanged: (p) =>
+              _update((s) => s.wakeyOpenPercent = p),
           parentActive: parentActive,
         ),
         const SizedBox(height: 16),
@@ -73,6 +87,22 @@ class AutoModeControls extends StatelessWidget {
           onClosurePercentChanged: (v) =>
               _update((s) => s.weatherClosurePercent = v),
         ),
+        if (onSave != null) ...[
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: onSave,
+              icon: const Icon(Icons.save),
+              label: const Text('Save Settings'),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ),
+        ],
       ],
     );
   }

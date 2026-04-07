@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 class ManualModeControls extends StatelessWidget {
   final double sliderValue;
   final ValueChanged<double> onSliderChanged;
+  final ValueChanged<double>? onSliderChangeEnd;
 
   const ManualModeControls({
     required this.sliderValue,
     required this.onSliderChanged,
+    this.onSliderChangeEnd,
     super.key,
   });
 
@@ -36,6 +38,7 @@ class ManualModeControls extends StatelessWidget {
               value: sliderValue,
               max: 100,
               onChanged: onSliderChanged,
+              onChangeEnd: onSliderChangeEnd,
             ),
             const SizedBox(height: 8),
             Row(

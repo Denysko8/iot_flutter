@@ -1,6 +1,7 @@
 import 'package:iot_flutter/domain/usecases/user_usecase.dart';
 import 'package:iot_flutter/models/user.dart';
 import 'package:iot_flutter/services/service_locator.dart';
+import 'package:iot_flutter/services/location_service.dart';
 
 /// Контролер для управління профілем користувача
 class ProfileController {
@@ -9,11 +10,14 @@ class ProfileController {
   bool isEditing = false;
   String? errorMessage;
   String? successMessage;
+  bool isLoadingLocation = false;
 
   late UserUseCase _userUseCase;
+  late LocationService _locationService;
 
   ProfileController() {
     _userUseCase = ServiceLocator().userUseCase;
+    _locationService = ServiceLocator().locationService;
   }
 
   /// Завантажує поточного користувача
@@ -54,10 +58,111 @@ class ProfileController {
         name: newName.trim(),
         email: newEmail.trim(),
         password: currentUser!.password,
+        city: currentUser!.city,
+        latitude: currentUser!.latitude,
+        longitude: currentUser!.longitude,
       );
       return true;
     } else {
       errorMessage = result.errorMessage;
+      return false;
+    }
+  }
+
+  /// Отримати поточну локацію користувача
+  Future<Map<String, dynamic>?> getCurrentLocation() async {
+    try {
+      final hasInternet =
+          await ServiceLocator().connectivityService.checkConnection();
+      if (!hasInternet) {
+        errorMessage = 'Відсутнє підключення до Інтернету';
+        return null;
+      }
+
+      isLoadingLocation = true;
+      final position = await _locationService.getCurrentPosition();
+
+      if (position == null) {
+        errorMessage = 'Не вдалося отримати локацію. Перевірте дозволи.';
+        isLoadingLocation = false;
+        return null;
+      }
+
+      final city = await _locationService.getCityName(
+        position.latitude,
+        position.longitude,
+      );
+
+      isLoadingLocation = false;
+      return {
+        'city': city ?? 'Unknown',
+        'latitude': position.latitude,
+        'longitude': position.longitude,
+      };
+    } catch (e) {
+      errorMessage = 'Помилка отримання локації: $e';
+      isLoadingLocation = false;
+      return null;
+    }
+  }
+
+  /// Встановити локацію вручну за назвою міста
+  Future<Map<String, dynamic>?> setLocationByCity(String cityName) async {
+    try {
+      final hasInternet =
+          await ServiceLocator().connectivityService.checkConnection();
+      if (!hasInternet) {
+        errorMessage = 'Відсутнє підключення до Інтернету';
+        return null;
+      }
+
+      isLoadingLocation = true;
+      final location = await _locationService.getCoordinatesFromCity(cityName);
+
+      if (location == null) {
+        errorMessage = 'Не вдалося знайти місто "$cityName"';
+        isLoadingLocation = false;
+        return null;
+      }
+
+      isLoadingLocation = false;
+      return {
+        'city': cityName,
+        'latitude': location.latitude,
+        'longitude': location.longitude,
+      };
+    } catch (e) {
+      errorMessage = 'Помилка пошуку міста: $e';
+      isLoadingLocation = false;
+      return null;
+    }
+  }
+
+  /// Зберегти локацію в профіль користувача
+  Future<bool> saveLocation(
+    String city,
+    double latitude,
+    double longitude,
+  ) async {
+    if (currentUser == null) return false;
+
+    try {
+      // Оновлюємо користувача з новою локацією
+      final updatedUser = currentUser!.copyWith(
+        city: city,
+        latitude: latitude,
+        longitude: longitude,
+      );
+
+      // Зберігаємо в репозиторій
+      await _userUseCase.userRepository.updateUser(updatedUser);
+      await _userUseCase.userRepository.setCurrentUser(updatedUser);
+
+      currentUser = updatedUser;
+      successMessage = 'Локацію збережено: $city';
+      return true;
+    } catch (e) {
+      errorMessage = 'Помилка збереження локації: $e';
       return false;
     }
   }
@@ -86,5 +191,10 @@ class ProfileController {
   /// Очищує сповіщення про успіх
   void clearSuccessMessage() {
     successMessage = null;
+  }
+
+  /// Очищує сповіщення про помилку
+  void clearErrorMessage() {
+    errorMessage = null;
   }
 }

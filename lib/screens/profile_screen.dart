@@ -115,6 +115,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  void _handleLocationUpdated() async {
+    setState(() {
+      // Перезавантажити профіль після оновлення локації
+    });
+    print('ProfileScreen: Локація оновлена');
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_controller.isLoading) {
@@ -156,6 +163,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       onSaveChanges: _handleSaveChanges,
       onLogout: _handleLogout,
       onDeleteAccount: _handleDeleteAccount,
+      onLocationUpdated: _handleLocationUpdated,
     );
   }
 

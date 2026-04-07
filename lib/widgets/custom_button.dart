@@ -4,11 +4,13 @@ class CustomButton extends StatelessWidget {
   final String text;
   final VoidCallback? onPressed;
   final bool isPrimary;
+  final IconData? icon;
 
   const CustomButton({
     required this.text,
     this.onPressed,
     this.isPrimary = true,
+    this.icon,
     super.key,
   });
 
@@ -30,10 +32,22 @@ class CustomButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
           ),
         ),
-        child: Text(
-          text,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
+        child: icon != null
+            ? Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon),
+                  const SizedBox(width: 8),
+                  Text(
+                    text,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              )
+            : Text(
+                text,
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
       ),
     );
   }

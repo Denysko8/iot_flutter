@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:iot_flutter/widgets/setting_card.dart';
 
-class WeatherControl extends StatelessWidget {
+class WeatherControl extends StatefulWidget {
   final bool enabled;
   final ValueChanged<bool> onEnabledChanged;
   final Set<String> selected;
@@ -20,12 +20,33 @@ class WeatherControl extends StatelessWidget {
   });
 
   @override
+  State<WeatherControl> createState() => _WeatherControlState();
+}
+
+class _WeatherControlState extends State<WeatherControl> {
+  late double _localClosurePercent;
+
+  @override
+  void initState() {
+    super.initState();
+    _localClosurePercent = widget.closurePercent;
+  }
+
+  @override
+  void didUpdateWidget(WeatherControl oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.closurePercent != oldWidget.closurePercent) {
+      _localClosurePercent = widget.closurePercent;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return SettingCard(
       title: 'Weather Control',
       icon: Icons.cloud,
-      trailing: Switch(value: enabled, onChanged: onEnabledChanged),
-      child: enabled
+      trailing: Switch(value: widget.enabled, onChanged: widget.onEnabledChanged),
+      child: widget.enabled
           ? Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -54,22 +75,34 @@ class WeatherControl extends StatelessWidget {
                     Text(
                       'Open to:',
                       style: TextStyle(
-                        color: selected.isEmpty ? Colors.grey : Colors.black,
+                        color: widget.selected.isEmpty ? Colors.grey : Colors.black,
                       ),
                     ),
                     Text(
-                      '${closurePercent.round()}%',
+                      '${_localClosurePercent.round()}%',
                       style: TextStyle(
-                        color: selected.isEmpty ? Colors.grey : Colors.black,
+                        color: widget.selected.isEmpty ? Colors.grey : Colors.black,
                       ),
                     ),
                   ],
                 ),
                 Slider(
-                  value: closurePercent,
+                  value: _localClosurePercent,
                   max: 100,
-                  onChanged:
-                      selected.isEmpty ? null : onClosurePercentChanged,
+                  divisions: 100,
+                  label: '${_localClosurePercent.round()}%',
+                  onChanged: widget.selected.isEmpty
+                      ? null
+                      : (v) {
+                          setState(() {
+                            _localClosurePercent = v;
+                          });
+                        },
+                  onChangeEnd: widget.selected.isEmpty
+                      ? null
+                      : (v) {
+                          widget.onClosurePercentChanged(v);
+                        },
                 ),
               ],
             )
@@ -82,8 +115,8 @@ class WeatherControl extends StatelessWidget {
     String weather,
     IconData icon,
   ) {
-    final isSelected = selected.contains(weather);
-    final canSelect = selected.length < 3 || isSelected;
+    final isSelected = widget.selected.contains(weather);
+    final canSelect = widget.selected.length < 3 || isSelected;
     return FilterChip(
       label: Row(
         mainAxisSize: MainAxisSize.min,
@@ -96,13 +129,13 @@ class WeatherControl extends StatelessWidget {
       selected: isSelected,
       onSelected: canSelect
           ? (sel) {
-              final newSet = Set<String>.from(selected);
+              final newSet = Set<String>.from(widget.selected);
               if (sel) {
                 newSet.add(weather);
               } else {
                 newSet.remove(weather);
               }
-              onSelectedChanged(newSet);
+              widget.onSelectedChanged(newSet);
             }
           : null,
     );
