@@ -10,9 +10,10 @@ class WeatherService {
   static const String _baseUrl = 'https://api.openweathermap.org/data/2.5';
 
   String _getApiKey() {
-    final apiKey = dotenv.env['API_KEY'];
-    if (apiKey == null || apiKey.trim().isEmpty) {
-      print('WeatherService: API_KEY відсутній у .env');
+    final apiKey =
+        dotenv.env['API_KEY'] ?? const String.fromEnvironment('API_KEY');
+    if (apiKey.trim().isEmpty) {
+      print('WeatherService: API_KEY відсутній у .env/.env.example');
       return '';
     }
     return apiKey.trim();

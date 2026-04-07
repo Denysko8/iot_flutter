@@ -7,7 +7,11 @@ import 'package:iot_flutter/services/service_locator.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await dotenv.load();
+  try {
+    await dotenv.load();
+  } catch (_) {
+    await dotenv.load(fileName: '.env.example');
+  }
 
   // Ініціалізуємо всі залежності
   await ServiceLocator().initialize();

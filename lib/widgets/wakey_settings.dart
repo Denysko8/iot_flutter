@@ -61,121 +61,133 @@ class _WakeySettingsState extends State<WakeySettings> {
     return SettingCard(
       title: 'Wakey, wakey!',
       icon: Icons.wb_sunny,
-      trailing: Switch(value: widget.enabled, onChanged: widget.onEnabledChanged),
-      child: showExpanded
-          ? Column(
-              children: [
-                CheckboxListTile(
-                  title: const Text('At dawn'),
-                  value: widget.atSunrise,
-                  onChanged: (v) => widget.onAtSunriseChanged(v ?? true),
-                  contentPadding: EdgeInsets.zero,
-                  controlAffinity: ListTileControlAffinity.leading,
-                ),
-                InkWell(
-                  onTap: widget.atSunrise
-                      ? null
-                      : () async {
-                          final picked = await showTimePicker(
-                            context: context,
-                            initialTime: widget.time,
-                          );
-                          if (picked != null) widget.onTimeChanged(picked);
-                        },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: widget.atSunrise
-                            ? Colors.grey.shade300
-                            : Colors.blue,
+      trailing: Switch(
+        value: widget.enabled,
+        onChanged: widget.onEnabledChanged,
+      ),
+      child:
+          showExpanded
+              ? Column(
+                children: [
+                  CheckboxListTile(
+                    title: const Text('At dawn'),
+                    value: widget.atSunrise,
+                    onChanged: (v) {
+                      widget.onAtSunriseChanged(v ?? true);
+                    },
+                    contentPadding: EdgeInsets.zero,
+                    controlAffinity: ListTileControlAffinity.leading,
+                  ),
+                  InkWell(
+                    onTap:
+                        widget.atSunrise
+                            ? null
+                            : () async {
+                              final picked = await showTimePicker(
+                                context: context,
+                                initialTime: widget.time,
+                              );
+                              if (picked != null) widget.onTimeChanged(picked);
+                            },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
                       ),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Wake up time:',
-                          style: TextStyle(
-                            color: widget.atSunrise ? Colors.grey : Colors.black,
-                          ),
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color:
+                              widget.atSunrise
+                                  ? Colors.grey.shade300
+                                  : Colors.blue,
                         ),
-                        Text(
-                          widget.time.format(context),
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: widget.atSunrise ? Colors.grey : Colors.black,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Wake up time:',
+                            style: TextStyle(
+                              color:
+                                  widget.atSunrise ? Colors.grey : Colors.black,
+                            ),
                           ),
-                        ),
-                      ],
+                          Text(
+                            widget.time.format(context),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color:
+                                  widget.atSunrise ? Colors.grey : Colors.black,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Launch before waking up:',
-                      style: TextStyle(
-                        color: widget.atSunrise ? Colors.grey : Colors.black,
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Launch before waking up:',
+                        style: TextStyle(
+                          color: widget.atSunrise ? Colors.grey : Colors.black,
+                        ),
                       ),
-                    ),
-                    Text(
-                      '${_localMinutesBefore.round()} min',
-                      style: TextStyle(
-                        color: widget.atSunrise ? Colors.grey : Colors.black,
+                      Text(
+                        '${_localMinutesBefore.round()} min',
+                        style: TextStyle(
+                          color: widget.atSunrise ? Colors.grey : Colors.black,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                Slider(
-                  value: _localMinutesBefore,
-                  max: 60,
-                  divisions: 60,
-                  label: '${_localMinutesBefore.round()} min',
-                  onChanged: widget.atSunrise
-                      ? null
-                      : (v) {
-                          setState(() {
-                            _localMinutesBefore = v;
-                          });
-                        },
-                  onChangeEnd: widget.atSunrise
-                      ? null
-                      : (v) {
-                          widget.onMinutesBeforeChanged(v.round());
-                        },
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('Open to:'),
-                    Text('${_localOpenPercent.round()}%'),
-                  ],
-                ),
-                Slider(
-                  value: _localOpenPercent,
-                  max: 100,
-                  divisions: 100,
-                  label: '${_localOpenPercent.round()}%',
-                  onChanged: (v) {
-                    setState(() {
-                      _localOpenPercent = v;
-                    });
-                  },
-                  onChangeEnd: (v) {
-                    widget.onOpenPercentChanged(v);
-                  },
-                ),
-              ],
-            )
-          : const SizedBox.shrink(),
+                    ],
+                  ),
+                  Slider(
+                    value: _localMinutesBefore,
+                    max: 60,
+                    divisions: 60,
+                    label: '${_localMinutesBefore.round()} min',
+                    onChanged:
+                        widget.atSunrise
+                            ? null
+                            : (v) {
+                              setState(() {
+                                _localMinutesBefore = v;
+                              });
+                            },
+                    onChangeEnd:
+                        widget.atSunrise
+                            ? null
+                            : (v) {
+                              widget.onMinutesBeforeChanged(v.round());
+                            },
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Open to:'),
+                      Text('${_localOpenPercent.round()}%'),
+                    ],
+                  ),
+                  Slider(
+                    value: _localOpenPercent,
+                    max: 100,
+                    divisions: 100,
+                    label: '${_localOpenPercent.round()}%',
+                    onChanged: (v) {
+                      setState(() {
+                        _localOpenPercent = v;
+                      });
+                    },
+                    onChangeEnd: (v) {
+                      widget.onOpenPercentChanged(v);
+                    },
+                  ),
+                ],
+              )
+              : const SizedBox.shrink(),
     );
   }
 }
