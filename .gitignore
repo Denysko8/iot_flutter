@@ -33,6 +33,11 @@ migrate_working_dir/
 .pub/
 /build/
 
+# Local environment files
+.env
+.env.*
+!.env.example
+
 # Symbolication related
 app.*.symbols
 
@@ -44,4 +49,5 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-macos/Flutter/GeneratedPluginRegistrant.swift
+macos/
+windows/

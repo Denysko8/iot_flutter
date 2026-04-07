@@ -2,11 +2,17 @@ class User {
   final String name;
   final String email;
   final String password;
+  final String? city;
+  final double? latitude;
+  final double? longitude;
 
   const User({
     required this.name,
     required this.email,
     required this.password,
+    this.city,
+    this.latitude,
+    this.longitude,
   });
 
   factory User.fromMap(Map<String, dynamic> map) {
@@ -14,6 +20,9 @@ class User {
       name: map['name'] as String,
       email: map['email'] as String,
       password: map['password'] as String,
+      city: map['city'] as String?,
+      latitude: map['latitude'] as double?,
+      longitude: map['longitude'] as double?,
     );
   }
 
@@ -22,6 +31,9 @@ class User {
       'name': name,
       'email': email,
       'password': password,
+      'city': city,
+      'latitude': latitude,
+      'longitude': longitude,
     };
   }
 
@@ -29,11 +41,17 @@ class User {
     String? name,
     String? email,
     String? password,
+    String? city,
+    double? latitude,
+    double? longitude,
   }) {
     return User(
       name: name ?? this.name,
       email: email ?? this.email,
       password: password ?? this.password,
+      city: city ?? this.city,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
     );
   }
 }

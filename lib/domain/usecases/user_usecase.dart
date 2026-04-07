@@ -53,6 +53,9 @@ class UserUseCase {
   })  : _userRepository = userRepository,
         _userValidator = userValidator;
 
+  // Getter для доступу до репозиторію
+  UserRepository get userRepository => _userRepository;
+
   /// Реєструє нового користувача
   Future<RegistrationResult> registerUser({
     required String name,

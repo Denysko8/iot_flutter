@@ -33,6 +33,19 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
+      // Перевірка підключення до Інтернету
+      final connectivityService = ServiceLocator().connectivityService;
+      final hasConnection = await connectivityService.checkConnection();
+
+      if (!hasConnection) {
+        if (!mounted) return;
+        _showNoInternetDialog();
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+
       final userUseCase = ServiceLocator().userUseCase;
       final result = await userUseCase.loginUser(
         email: _emailController.text.trim(),
@@ -63,6 +76,32 @@ class _LoginScreenState extends State<LoginScreen> {
         });
       }
     }
+  }
+
+  void _showNoInternetDialog() {
+    showDialog<void>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.wifi_off, color: Colors.orange),
+                SizedBox(width: 8),
+                Text('Немає з\'єднання'),
+              ],
+            ),
+            content: const Text(
+              'Для входу в систему необхідне підключення до Інтернету. '
+              'Будь ласка, перевірте ваше з\'єднання та спробуйте знову.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Зрозуміло'),
+              ),
+            ],
+          ),
+    );
   }
 
   void _navigateToRegister() {

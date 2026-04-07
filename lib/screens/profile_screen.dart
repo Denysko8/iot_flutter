@@ -73,23 +73,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final navContext = context;
     final confirmed = await showDialog<bool>(
       context: navContext,
-      builder: (context) => AlertDialog(
-        title: const Text('Видалити акаунт'),
-        content: const Text(
-          'Ви впевнені, що хочете видалити акаунт? '
-          'Цю дію неможливо буде скасувати.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Скасувати'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Видалити акаунт'),
+            content: const Text(
+              'Ви впевнені, що хочете видалити акаунт? '
+              'Цю дію неможливо буде скасувати.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Скасувати'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text(
+                  'Видалити',
+                  style: TextStyle(color: Colors.red),
+                ),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Видалити', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
     );
 
     if (confirmed == true) {
@@ -115,12 +119,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  void _handleLocationUpdated() async {
+    setState(() {
+      // Перезавантажити профіль після оновлення локації
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_controller.isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     if (_controller.currentUser == null) {
@@ -134,13 +142,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 16),
               CustomButton(
                 text: 'Go to Login',
-                onPressed: () => Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute<void>(
-                    builder: (context) => const LoginScreen(),
-                  ),
-                  (route) => false,
-                ),
+                onPressed:
+                    () => Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (context) => const LoginScreen(),
+                      ),
+                      (route) => false,
+                    ),
               ),
             ],
           ),
@@ -156,6 +165,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       onSaveChanges: _handleSaveChanges,
       onLogout: _handleLogout,
       onDeleteAccount: _handleDeleteAccount,
+      onLocationUpdated: _handleLocationUpdated,
     );
   }
 
