@@ -1,11 +1,22 @@
+// ignore_for_file: avoid_print
+
 import 'dart:convert';
+
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
 /// Сервіс для отримання даних про погоду з OpenWeatherMap API
 class WeatherService {
-  static const String _apiKey =
-      'e5ccefc2d5dbe8656d8531be07d232de'; // Замініть на ваш API ключ
   static const String _baseUrl = 'https://api.openweathermap.org/data/2.5';
+
+  String _getApiKey() {
+    final apiKey = dotenv.env['API_KEY'];
+    if (apiKey == null || apiKey.trim().isEmpty) {
+      print('WeatherService: API_KEY відсутній у .env');
+      return '';
+    }
+    return apiKey.trim();
+  }
 
   /// Отримати поточну погоду за координатами
   Future<WeatherData?> getCurrentWeather(
@@ -13,8 +24,12 @@ class WeatherService {
     double longitude,
   ) async {
     try {
+      final apiKey = _getApiKey();
+      if (apiKey.isEmpty) {
+        return null;
+      }
       final url = Uri.parse(
-        '$_baseUrl/weather?lat=$latitude&lon=$longitude&appid=$_apiKey&units=metric',
+        '$_baseUrl/weather?lat=$latitude&lon=$longitude&appid=$apiKey&units=metric',
       );
 
       final response = await http.get(url);
@@ -49,8 +64,12 @@ class WeatherService {
     double longitude,
   ) async {
     try {
+      final apiKey = _getApiKey();
+      if (apiKey.isEmpty) {
+        return [];
+      }
       final url = Uri.parse(
-        '$_baseUrl/forecast?lat=$latitude&lon=$longitude&appid=$_apiKey&units=metric&cnt=8',
+        '$_baseUrl/forecast?lat=$latitude&lon=$longitude&appid=$apiKey&units=metric&cnt=8',
       );
 
       final response = await http.get(url);

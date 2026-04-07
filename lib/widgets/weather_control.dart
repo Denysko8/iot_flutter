@@ -1,3 +1,5 @@
+// ignore_for_file: lines_longer_than_80_chars
+
 import 'package:flutter/material.dart';
 import 'package:iot_flutter/widgets/setting_card.dart';
 
@@ -45,68 +47,80 @@ class _WeatherControlState extends State<WeatherControl> {
     return SettingCard(
       title: 'Weather Control',
       icon: Icons.cloud,
-      trailing: Switch(value: widget.enabled, onChanged: widget.onEnabledChanged),
-      child: widget.enabled
-          ? Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Select conditions (1-3):',
-                  style: TextStyle(fontWeight: FontWeight.w500),
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    _buildWeatherChip(context, 'Rain', Icons.water_drop),
-                    _buildWeatherChip(
-                      context,
-                      'Thunderstorm',
-                      Icons.thunderstorm,
-                    ),
-                    _buildWeatherChip(context, 'Clouds', Icons.cloud),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Open to:',
-                      style: TextStyle(
-                        color: widget.selected.isEmpty ? Colors.grey : Colors.black,
+      trailing: Switch(
+        value: widget.enabled,
+        onChanged: widget.onEnabledChanged,
+      ),
+      child:
+          widget.enabled
+              ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Select conditions (1-3):',
+                    style: TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _buildWeatherChip(context, 'Rain', Icons.water_drop),
+                      _buildWeatherChip(
+                        context,
+                        'Thunderstorm',
+                        Icons.thunderstorm,
                       ),
-                    ),
-                    Text(
-                      '${_localClosurePercent.round()}%',
-                      style: TextStyle(
-                        color: widget.selected.isEmpty ? Colors.grey : Colors.black,
+                      _buildWeatherChip(context, 'Clouds', Icons.cloud),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Open to:',
+                        style: TextStyle(
+                          color:
+                              widget.selected.isEmpty
+                                  ? Colors.grey
+                                  : Colors.black,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                Slider(
-                  value: _localClosurePercent,
-                  max: 100,
-                  divisions: 100,
-                  label: '${_localClosurePercent.round()}%',
-                  onChanged: widget.selected.isEmpty
-                      ? null
-                      : (v) {
-                          setState(() {
-                            _localClosurePercent = v;
-                          });
-                        },
-                  onChangeEnd: widget.selected.isEmpty
-                      ? null
-                      : (v) {
-                          widget.onClosurePercentChanged(v);
-                        },
-                ),
-              ],
-            )
-          : const SizedBox.shrink(),
+                      Text(
+                        '${_localClosurePercent.round()}%',
+                        style: TextStyle(
+                          color:
+                              widget.selected.isEmpty
+                                  ? Colors.grey
+                                  : Colors.black,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Slider(
+                    value: _localClosurePercent,
+                    max: 100,
+                    divisions: 100,
+                    label: '${_localClosurePercent.round()}%',
+                    onChanged:
+                        widget.selected.isEmpty
+                            ? null
+                            : (v) {
+                              setState(() {
+                                _localClosurePercent = v;
+                              });
+                            },
+                    onChangeEnd:
+                        widget.selected.isEmpty
+                            ? null
+                            : (v) {
+                              widget.onClosurePercentChanged(v);
+                            },
+                  ),
+                ],
+              )
+              : const SizedBox.shrink(),
     );
   }
 
@@ -127,17 +141,18 @@ class _WeatherControlState extends State<WeatherControl> {
         ],
       ),
       selected: isSelected,
-      onSelected: canSelect
-          ? (sel) {
-              final newSet = Set<String>.from(widget.selected);
-              if (sel) {
-                newSet.add(weather);
-              } else {
-                newSet.remove(weather);
+      onSelected:
+          canSelect
+              ? (sel) {
+                final newSet = Set<String>.from(widget.selected);
+                if (sel) {
+                  newSet.add(weather);
+                } else {
+                  newSet.remove(weather);
+                }
+                widget.onSelectedChanged(newSet);
               }
-              widget.onSelectedChanged(newSet);
-            }
-          : null,
+              : null,
     );
   }
 }

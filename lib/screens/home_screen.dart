@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print, lines_longer_than_80_chars
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:iot_flutter/models/auto_mode_settings.dart';
@@ -129,40 +131,25 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _saveAutoSettingsToPrefs(AutoModeSettings settings) async {
     final prefs = ServiceLocator().prefs;
-    await prefs.setBool(
-      'auto_wake_before_sunrise',
-      settings.wakeBeforeSunrise,
-    );
+    await prefs.setBool('auto_wake_before_sunrise', settings.wakeBeforeSunrise);
     await prefs.setBool(
       'auto_wake_at_sunrise_time',
       settings.wakeAtSunriseTime,
     );
     await prefs.setInt('auto_wake_time_hour', settings.wakeTime.hour);
     await prefs.setInt('auto_wake_time_minute', settings.wakeTime.minute);
-    await prefs.setInt(
-      'auto_wake_minutes_before',
-      settings.wakeMinutesBefore,
-    );
-    await prefs.setDouble(
-      'auto_wakey_open_percent',
-      settings.wakeyOpenPercent,
-    );
+    await prefs.setInt('auto_wake_minutes_before', settings.wakeMinutesBefore);
+    await prefs.setDouble('auto_wakey_open_percent', settings.wakeyOpenPercent);
     await prefs.setBool(
       'auto_temp_enabled',
       settings.temperatureControlEnabled,
     );
-    await prefs.setDouble(
-      'auto_temp_threshold',
-      settings.temperatureThreshold,
-    );
+    await prefs.setDouble('auto_temp_threshold', settings.temperatureThreshold);
     await prefs.setDouble(
       'auto_temp_closure_percent',
       settings.temperatureClosurePercent,
     );
-    await prefs.setBool(
-      'auto_weather_enabled',
-      settings.weatherControlEnabled,
-    );
+    await prefs.setBool('auto_weather_enabled', settings.weatherControlEnabled);
     await prefs.setString(
       'auto_selected_weathers',
       settings.selectedWeathers.join(','),
@@ -183,26 +170,18 @@ class _HomeScreenState extends State<HomeScreen> {
     final weathersStr = prefs.getString('auto_selected_weathers') ?? '';
 
     return AutoModeSettings(
-      wakeBeforeSunrise:
-          prefs.getBool('auto_wake_before_sunrise') ?? false,
-      wakeAtSunriseTime:
-          prefs.getBool('auto_wake_at_sunrise_time') ?? true,
+      wakeBeforeSunrise: prefs.getBool('auto_wake_before_sunrise') ?? false,
+      wakeAtSunriseTime: prefs.getBool('auto_wake_at_sunrise_time') ?? true,
       wakeTime: TimeOfDay(hour: hour, minute: minute),
-      wakeMinutesBefore:
-          prefs.getInt('auto_wake_minutes_before') ?? 0,
-      wakeyOpenPercent:
-          prefs.getDouble('auto_wakey_open_percent') ?? 100.0,
-      temperatureControlEnabled:
-          prefs.getBool('auto_temp_enabled') ?? false,
-      temperatureThreshold:
-          prefs.getDouble('auto_temp_threshold') ?? 22.0,
+      wakeMinutesBefore: prefs.getInt('auto_wake_minutes_before') ?? 0,
+      wakeyOpenPercent: prefs.getDouble('auto_wakey_open_percent') ?? 100.0,
+      temperatureControlEnabled: prefs.getBool('auto_temp_enabled') ?? false,
+      temperatureThreshold: prefs.getDouble('auto_temp_threshold') ?? 22.0,
       temperatureClosurePercent:
           prefs.getDouble('auto_temp_closure_percent') ?? 50.0,
-      weatherControlEnabled:
-          prefs.getBool('auto_weather_enabled') ?? false,
-      selectedWeathers: weathersStr.isEmpty
-          ? <String>{}
-          : weathersStr.split(',').toSet(),
+      weatherControlEnabled: prefs.getBool('auto_weather_enabled') ?? false,
+      selectedWeathers:
+          weathersStr.isEmpty ? <String>{} : weathersStr.split(',').toSet(),
       weatherClosurePercent:
           prefs.getDouble('auto_weather_closure_percent') ?? 50.0,
     );

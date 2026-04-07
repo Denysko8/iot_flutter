@@ -1,16 +1,18 @@
+// ignore_for_file: avoid_print, lines_longer_than_80_chars
+
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:iot_flutter/data/repositories/mqtt/mock_mqtt_window_repository.dart';
+import 'package:iot_flutter/data/repositories/mqtt/mqtt_window_repository.dart';
 import 'package:iot_flutter/data/repositories/user_repository.dart';
 import 'package:iot_flutter/data/repositories/user_repository_impl.dart';
-import 'package:iot_flutter/data/repositories/mqtt/mqtt_window_repository.dart';
-import 'package:iot_flutter/data/repositories/mqtt/mock_mqtt_window_repository.dart';
 import 'package:iot_flutter/domain/repositories/i_smart_window_repository.dart';
 import 'package:iot_flutter/domain/usecases/user_usecase.dart';
 import 'package:iot_flutter/domain/validators/user_validator.dart';
-import 'package:iot_flutter/services/connectivity_service.dart';
-import 'package:iot_flutter/services/weather_service.dart';
 import 'package:iot_flutter/services/auto_mode_executor.dart';
+import 'package:iot_flutter/services/connectivity_service.dart';
 import 'package:iot_flutter/services/location_service.dart';
 import 'package:iot_flutter/services/time_service.dart';
+import 'package:iot_flutter/services/weather_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ServiceLocator {
@@ -45,11 +47,16 @@ class ServiceLocator {
 
     // Ініціалізація MQTT репозиторію
     // Використовуємо збережену IP адресу або дефолтну
-    final brokerIp = mqttBrokerAddress ?? _prefs.getString('mqtt_broker_ip') ?? '192.168.0.102';
+    final brokerIp =
+        mqttBrokerAddress ??
+        _prefs.getString('mqtt_broker_ip') ??
+        '192.168.0.102';
 
     // На веб-платформі використовуємо mock реалізацію
     if (kIsWeb) {
-      _smartWindowRepository = MockMqttWindowRepository(brokerAddress: brokerIp);
+      _smartWindowRepository = MockMqttWindowRepository(
+        brokerAddress: brokerIp,
+      );
       print('ServiceLocator: Використовується Mock MQTT для веб-платформи');
     } else {
       _smartWindowRepository = MqttWindowRepository(brokerAddress: brokerIp);
@@ -86,9 +93,13 @@ class ServiceLocator {
   /// Оновити MQTT репозиторій з новою адресою
   void updateMqttRepository(String brokerAddress) {
     if (kIsWeb) {
-      _smartWindowRepository = MockMqttWindowRepository(brokerAddress: brokerAddress);
+      _smartWindowRepository = MockMqttWindowRepository(
+        brokerAddress: brokerAddress,
+      );
     } else {
-      _smartWindowRepository = MqttWindowRepository(brokerAddress: brokerAddress);
+      _smartWindowRepository = MqttWindowRepository(
+        brokerAddress: brokerAddress,
+      );
     }
   }
 }

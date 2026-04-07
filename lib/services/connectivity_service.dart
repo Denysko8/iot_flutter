@@ -1,4 +1,7 @@
+// ignore_for_file: avoid_print, lines_longer_than_80_chars
+
 import 'dart:async';
+
 import 'package:connectivity_plus/connectivity_plus.dart';
 
 /// Сервіс для перевірки підключення до Інтернету
@@ -26,13 +29,15 @@ class ConnectivityService {
   void startMonitoring(void Function(bool isConnected) onConnectivityChanged) {
     _onConnectivityChanged = onConnectivityChanged;
 
-    _connectivitySubscription = _connectivity.onConnectivityChanged.listen(
-      (List<ConnectivityResult> results) {
-        final isConnected = _isConnected(results);
-        print('ConnectivityService: Стан підключення змінено - ${isConnected ? "підключено" : "відключено"}');
-        _onConnectivityChanged?.call(isConnected);
-      },
-    );
+    _connectivitySubscription = _connectivity.onConnectivityChanged.listen((
+      List<ConnectivityResult> results,
+    ) {
+      final isConnected = _isConnected(results);
+      print(
+        'ConnectivityService: Стан підключення змінено - ${isConnected ? "підключено" : "відключено"}',
+      );
+      _onConnectivityChanged?.call(isConnected);
+    });
   }
 
   /// Зупинити відслідковування змін підключення
@@ -45,10 +50,11 @@ class ConnectivityService {
   /// Перевірити, чи є підключення на основі результату connectivity
   bool _isConnected(List<ConnectivityResult> results) {
     // Якщо є хоча б одне підключення (WiFi, mobile, ethernet), то вважаємо, що є Інтернет
-    return results.any((result) =>
-      result == ConnectivityResult.wifi ||
-      result == ConnectivityResult.mobile ||
-      result == ConnectivityResult.ethernet
+    return results.any(
+      (result) =>
+          result == ConnectivityResult.wifi ||
+          result == ConnectivityResult.mobile ||
+          result == ConnectivityResult.ethernet,
     );
   }
 

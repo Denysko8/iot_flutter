@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print, lines_longer_than_80_chars
+
 import 'dart:async';
 import 'package:iot_flutter/models/auto_mode_settings.dart';
 import 'package:iot_flutter/services/service_locator.dart';
@@ -9,13 +11,12 @@ class AutoModeExecutor {
   DateTime? _lastWakeyExecution;
   DateTime? _cachedSunriseDate;
   DateTime? _cachedSunriseTime;
+  AutoModeSettings? _wakeySettings;
 
-  AutoModeSettings? _currentSettings;
   bool _isRunning = false;
 
   /// Синхронізувати фоновий Wakey планувальник без збереження налаштувань
   void syncWakeyBackground(AutoModeSettings settings) {
-    _currentSettings = settings;
     _isRunning = true;
 
     if (!settings.wakeySensors) {
@@ -30,7 +31,6 @@ class AutoModeExecutor {
 
   /// Запустити виконання автоматичних режимів
   Future<void> executeAutoModes(AutoModeSettings settings) async {
-    _currentSettings = settings;
     _isRunning = true;
 
     print('AutoModeExecutor: Запуск автоматичних режимів через MQTT');
@@ -51,12 +51,18 @@ class AutoModeExecutor {
 
   /// Запустити перевірку Wakey кожну хвилину
   void _startWakeyScheduler(AutoModeSettings settings) {
+    _wakeySettings = settings;
     _wakeyTimer?.cancel();
     _checkAndExecuteWakey(settings);
-    _wakeyTimer = Timer.periodic(
-      const Duration(minutes: 1),
-      (_) => _checkAndExecuteWakey(settings),
-    );
+    _wakeyTimer = Timer.periodic(const Duration(minutes: 1), _handleWakeyTick);
+  }
+
+  void _handleWakeyTick(Timer _) {
+    final settings = _wakeySettings;
+    if (settings == null) {
+      return;
+    }
+    _checkAndExecuteWakey(settings);
   }
 
   /// Перевірити вікно Wakey і виконати одноразово в межах вікна
@@ -409,9 +415,7 @@ class AutoModeExecutor {
             weatherData.conditions.map((c) => c.toLowerCase()).toSet();
         final selectedConditions =
             settings.selectedWeathers.map((c) => c.toLowerCase()).toSet();
-        final hasMatch = currentConditions.any(
-          (c) => selectedConditions.contains(c),
-        );
+        final hasMatch = currentConditions.any(selectedConditions.contains);
 
         if (hasMatch) {
           print('   ✅ Умова виконана! Погода співпадає');
@@ -449,6 +453,7 @@ class AutoModeExecutor {
     _lastWakeyExecution = null;
     _cachedSunriseDate = null;
     _cachedSunriseTime = null;
+    _wakeySettings = null;
     _isRunning = false;
     print('AutoModeExecutor: Зупинено');
   }

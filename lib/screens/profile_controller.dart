@@ -1,7 +1,7 @@
 import 'package:iot_flutter/domain/usecases/user_usecase.dart';
 import 'package:iot_flutter/models/user.dart';
-import 'package:iot_flutter/services/service_locator.dart';
 import 'package:iot_flutter/services/location_service.dart';
+import 'package:iot_flutter/services/service_locator.dart';
 
 /// Контролер для управління профілем користувача
 class ProfileController {

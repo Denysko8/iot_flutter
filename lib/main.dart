@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:iot_flutter/screens/login_screen.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:iot_flutter/screens/home_screen.dart';
+import 'package:iot_flutter/screens/login_screen.dart';
 import 'package:iot_flutter/services/service_locator.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await dotenv.load();
 
   // Ініціалізуємо всі залежності
   await ServiceLocator().initialize();
@@ -58,7 +61,7 @@ class _SplashScreenState extends State<SplashScreen> {
       if (!hasConnection) {
         // Немає з'єднання - показуємо попередження, але дозволяємо доступ
         _showNoInternetWarning();
-        await Future.delayed(const Duration(seconds: 2));
+        await Future<void>.delayed(const Duration(seconds: 2));
       }
 
       // Переходимо на домашній екран
@@ -87,7 +90,8 @@ class _SplashScreenState extends State<SplashScreen> {
             SizedBox(width: 8),
             Expanded(
               child: Text(
-                'Немає з\'єднання з Інтернетом. Функціонал може бути обмежений.',
+                'Немає з\'єднання з Інтернетом. '
+                'Функціонал може бути обмежений.',
               ),
             ),
           ],

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:iot_flutter/screens/profile_controller.dart';
-import 'package:iot_flutter/screens/mqtt_settings_screen.dart';
 import 'package:iot_flutter/screens/location_settings_screen.dart';
+import 'package:iot_flutter/screens/mqtt_settings_screen.dart';
+import 'package:iot_flutter/screens/profile_controller.dart';
 import 'package:iot_flutter/widgets/custom_button.dart';
 import 'package:iot_flutter/widgets/responsive_padding.dart';
 
@@ -52,8 +52,7 @@ class ProfileLayout extends StatelessWidget {
                   child: Icon(
                     Icons.person,
                     size: 64,
-                    color:
-                        Theme.of(context).colorScheme.onPrimaryContainer,
+                    color: Theme.of(context).colorScheme.onPrimaryContainer,
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -86,9 +85,9 @@ class ProfileLayout extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     controller.currentUser!.email,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey[600],
-                        ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
                   ),
                 ],
                 if (controller.errorMessage != null) ...[
@@ -126,7 +125,8 @@ class ProfileLayout extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceVariant,
+                    color:
+                        Theme.of(context).colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: Theme.of(context).colorScheme.outline,
@@ -160,9 +160,10 @@ class ProfileLayout extends StatelessWidget {
                           final result = await Navigator.push<bool>(
                             context,
                             MaterialPageRoute<bool>(
-                              builder: (context) => LocationSettingsScreen(
-                                controller: controller,
-                              ),
+                              builder:
+                                  (context) => LocationSettingsScreen(
+                                    controller: controller,
+                                  ),
                             ),
                           );
                           if (result == true) {
@@ -175,10 +176,7 @@ class ProfileLayout extends StatelessWidget {
                 ),
                 const SizedBox(height: 32),
                 if (controller.isEditing) ...[
-                  CustomButton(
-                    text: 'Save Changes',
-                    onPressed: onSaveChanges,
-                  ),
+                  CustomButton(text: 'Save Changes', onPressed: onSaveChanges),
                   const SizedBox(height: 16),
                 ],
                 CustomButton(

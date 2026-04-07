@@ -1,3 +1,5 @@
+// ignore_for_file: lines_longer_than_80_chars
+
 import 'package:flutter/material.dart';
 import 'package:iot_flutter/services/service_locator.dart';
 import 'package:iot_flutter/widgets/custom_button.dart';
@@ -65,9 +67,10 @@ class _MqttSettingsScreenState extends State<MqttSettingsScreen> {
 
       setState(() {
         _isSuccess = connected;
-        _statusMessage = connected
-            ? 'Підключення успішне! IP адресу збережено.'
-            : 'Не вдалося підключитися до брокера. Перевірте IP адресу.';
+        _statusMessage =
+            connected
+                ? 'Підключення успішне! IP адресу збережено.'
+                : 'Не вдалося підключитися до брокера. Перевірте IP адресу.';
         _isLoading = false;
       });
     } catch (e) {
@@ -82,9 +85,7 @@ class _MqttSettingsScreenState extends State<MqttSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Налаштування MQTT'),
-      ),
+      appBar: AppBar(title: const Text('Налаштування MQTT')),
       body: SafeArea(
         child: ResponsivePadding(
           child: Column(
@@ -129,24 +130,36 @@ class _MqttSettingsScreenState extends State<MqttSettingsScreen> {
                   padding: const EdgeInsets.all(12),
                   margin: const EdgeInsets.only(bottom: 16),
                   decoration: BoxDecoration(
-                    color: _isSuccess ? Colors.green.shade100 : Colors.red.shade100,
+                    color:
+                        _isSuccess
+                            ? Colors.green.shade100
+                            : Colors.red.shade100,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: _isSuccess ? Colors.green.shade400 : Colors.red.shade400,
+                      color:
+                          _isSuccess
+                              ? Colors.green.shade400
+                              : Colors.red.shade400,
                     ),
                   ),
                   child: Row(
                     children: [
                       Icon(
                         _isSuccess ? Icons.check_circle : Icons.error,
-                        color: _isSuccess ? Colors.green.shade800 : Colors.red.shade800,
+                        color:
+                            _isSuccess
+                                ? Colors.green.shade800
+                                : Colors.red.shade800,
                       ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           _statusMessage!,
                           style: TextStyle(
-                            color: _isSuccess ? Colors.green.shade900 : Colors.red.shade900,
+                            color:
+                                _isSuccess
+                                    ? Colors.green.shade900
+                                    : Colors.red.shade900,
                           ),
                         ),
                       ),
@@ -154,7 +167,8 @@ class _MqttSettingsScreenState extends State<MqttSettingsScreen> {
                   ),
                 ),
               CustomButton(
-                text: _isLoading ? 'Підключення...' : 'Зберегти та підключитися',
+                text:
+                    _isLoading ? 'Підключення...' : 'Зберегти та підключитися',
                 onPressed: _isLoading ? null : _saveAndTestConnection,
               ),
               const SizedBox(height: 16),

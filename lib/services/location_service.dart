@@ -1,5 +1,7 @@
-import 'package:geolocator/geolocator.dart';
+// ignore_for_file: avoid_print
+
 import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
 
 /// Сервіс для роботи з геолокацією
 class LocationService {

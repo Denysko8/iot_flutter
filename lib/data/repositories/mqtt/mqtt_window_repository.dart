@@ -1,7 +1,10 @@
+// ignore_for_file: avoid_print, lines_longer_than_80_chars, curly_braces_in_flow_control_structures, prefer_null_aware_method_calls
+
 import 'dart:async';
+
+import 'package:iot_flutter/domain/repositories/i_smart_window_repository.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
-import 'package:iot_flutter/domain/repositories/i_smart_window_repository.dart';
 
 /// Реалізація MQTT репозиторію для управління розумним вікном
 class MqttWindowRepository implements ISmartWindowRepository {

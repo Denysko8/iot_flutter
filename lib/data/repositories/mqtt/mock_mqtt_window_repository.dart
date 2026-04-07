@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print, lines_longer_than_80_chars
+
 import 'package:iot_flutter/domain/repositories/i_smart_window_repository.dart';
 
 /// Mock реалізація MQTT репозиторію для веб-платформи
@@ -36,13 +38,17 @@ class MockMqttWindowRepository implements ISmartWindowRepository {
 
   @override
   Future<void> sendWakeyState(bool enabled) async {
-    print('MQTT Mock: Надіслано wakey стан ${enabled ? "on" : "off"} (не реально)');
+    print(
+      'MQTT Mock: Надіслано wakey стан ${enabled ? "on" : "off"} (не реально)',
+    );
     throw UnsupportedError('MQTT не підтримується на веб-платформі');
   }
 
   @override
   Future<void> sendWakeyMode(bool atDawn) async {
-    print('MQTT Mock: Надіслано wakey режим ${atDawn ? "at_dawn" : "custom"} (не реально)');
+    print(
+      'MQTT Mock: Надіслано wakey режим ${atDawn ? "at_dawn" : "custom"} (не реально)',
+    );
     throw UnsupportedError('MQTT не підтримується на веб-платформі');
   }
 
@@ -54,19 +60,25 @@ class MockMqttWindowRepository implements ISmartWindowRepository {
 
   @override
   Future<void> sendWakeyMinutesBefore(int minutes) async {
-    print('MQTT Mock: Надіслано хвилини перед пробудженням $minutes (не реально)');
+    print(
+      'MQTT Mock: Надіслано хвилини перед пробудженням $minutes (не реально)',
+    );
     throw UnsupportedError('MQTT не підтримується на веб-платформі');
   }
 
   @override
   Future<void> sendWakeyOpenPercent(int percent) async {
-    print('MQTT Mock: Надіслано wakey відсоток відкриття $percent (не реально)');
+    print(
+      'MQTT Mock: Надіслано wakey відсоток відкриття $percent (не реально)',
+    );
     throw UnsupportedError('MQTT не підтримується на веб-платформі');
   }
 
   @override
   Future<void> sendTempControlState(bool enabled) async {
-    print('MQTT Mock: Надіслано temp control стан ${enabled ? "on" : "off"} (не реально)');
+    print(
+      'MQTT Mock: Надіслано temp control стан ${enabled ? "on" : "off"} (не реально)',
+    );
     throw UnsupportedError('MQTT не підтримується на веб-платформі');
   }
 
@@ -84,7 +96,9 @@ class MockMqttWindowRepository implements ISmartWindowRepository {
 
   @override
   Future<void> sendWeatherControlState(bool enabled) async {
-    print('MQTT Mock: Надіслано weather control стан ${enabled ? "on" : "off"} (не реально)');
+    print(
+      'MQTT Mock: Надіслано weather control стан ${enabled ? "on" : "off"} (не реально)',
+    );
     throw UnsupportedError('MQTT не підтримується на веб-платформі');
   }
 
@@ -102,7 +116,9 @@ class MockMqttWindowRepository implements ISmartWindowRepository {
 
   @override
   Future<void> sendSelectedWeatherConditions(Set<String> conditions) async {
-    print('MQTT Mock: Надіслано вибрані умови ${conditions.join(",")} (не реально)');
+    print(
+      'MQTT Mock: Надіслано вибрані умови ${conditions.join(",")} (не реально)',
+    );
     throw UnsupportedError('MQTT не підтримується на веб-платформі');
   }
 
@@ -125,7 +141,9 @@ class MockMqttWindowRepository implements ISmartWindowRepository {
   }
 
   @override
-  void subscribeToFeedback(void Function(String topic, String message) callback) {
+  void subscribeToFeedback(
+    void Function(String topic, String message) callback,
+  ) {
     print('MQTT Mock: Підписка на зворотний зв\'язок (не реально)');
     // Нічого не робимо на вебі
   }

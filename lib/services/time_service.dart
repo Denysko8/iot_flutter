@@ -1,3 +1,5 @@
+// ignore_for_file: lines_longer_than_80_chars, avoid_redundant_argument_values
+
 import 'package:intl/intl.dart';
 
 /// Сервіс для роботи з часом та розрахунку світанку
@@ -22,12 +24,11 @@ class TimeService {
     final latRad = latitude * (3.14159 / 180);
 
     // Розрахунок declination (схилення сонця)
-    final declination = 0.4095 * (3.14159 / 180) *
-        (dayOfYear - 81).toDouble();
+    final declination = 0.4095 * (3.14159 / 180) * (dayOfYear - 81).toDouble();
 
     // Розрахунок годинного кута світанку
-    final cosHourAngle = ((-0.01454).toDouble() -
-        (latRad * declination)) /
+    final cosHourAngle =
+        ((-0.01454).toDouble() - (latRad * declination)) /
         ((1 - latRad * latRad) * (1 - declination * declination));
 
     var hourAngle = 0.0;
@@ -96,9 +97,6 @@ class TimeService {
   /// Парсити рядок часу у години та хвилини
   Map<String, int> parseTimeString(String timeString) {
     final parts = timeString.split(':');
-    return {
-      'hour': int.parse(parts[0]),
-      'minute': int.parse(parts[1]),
-    };
+    return {'hour': int.parse(parts[0]), 'minute': int.parse(parts[1])};
   }
 }

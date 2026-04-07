@@ -1,8 +1,11 @@
+// ignore_for_file: avoid_print, lines_longer_than_80_chars
+
 import 'dart:async';
-import 'package:iot_flutter/services/weather_service.dart';
-import 'package:iot_flutter/services/time_service.dart';
-import 'package:iot_flutter/services/service_locator.dart';
+
 import 'package:iot_flutter/models/auto_mode_settings.dart';
+import 'package:iot_flutter/services/service_locator.dart';
+import 'package:iot_flutter/services/time_service.dart';
+import 'package:iot_flutter/services/weather_service.dart';
 
 /// Сервіс для автоматичного моніторингу погоди та часу
 class AutoModeMonitor {
@@ -16,12 +19,12 @@ class AutoModeMonitor {
   DateTime? _lastWeatherCheck;
 
   // Callbacks
-  Function(int position)? onPositionChange;
-  Function(String message)? onStatusUpdate;
+  void Function(int position)? onPositionChange;
+  void Function(String message)? onStatusUpdate;
 
   AutoModeMonitor()
-      : _weatherService = ServiceLocator().weatherService,
-        _timeService = ServiceLocator().timeService;
+    : _weatherService = ServiceLocator().weatherService,
+      _timeService = ServiceLocator().timeService;
 
   /// Запустити моніторинг автоматичних режимів
   void startMonitoring({
@@ -32,7 +35,9 @@ class AutoModeMonitor {
     stopMonitoring();
 
     // Перевірка погоди кожні 15 хвилин
-    if (settings.weatherControlEnabled && latitude != null && longitude != null) {
+    if (settings.weatherControlEnabled &&
+        latitude != null &&
+        longitude != null) {
       _checkWeather(settings, latitude, longitude);
       _weatherCheckTimer = Timer.periodic(
         const Duration(minutes: 15),
@@ -41,7 +46,9 @@ class AutoModeMonitor {
     }
 
     // Перевірка температури кожні 10 хвилин
-    if (settings.temperatureControlEnabled && latitude != null && longitude != null) {
+    if (settings.temperatureControlEnabled &&
+        latitude != null &&
+        longitude != null) {
       _checkTemperature(settings, latitude, longitude);
       _timeCheckTimer = Timer.periodic(
         const Duration(minutes: 10),
@@ -74,7 +81,10 @@ class AutoModeMonitor {
     double longitude,
   ) async {
     try {
-      final weather = await _weatherService.getCurrentWeather(latitude, longitude);
+      final weather = await _weatherService.getCurrentWeather(
+        latitude,
+        longitude,
+      );
       if (weather == null) return;
 
       _lastWeatherData = weather;
@@ -108,7 +118,10 @@ class AutoModeMonitor {
     double longitude,
   ) async {
     try {
-      final weather = await _weatherService.getCurrentWeather(latitude, longitude);
+      final weather = await _weatherService.getCurrentWeather(
+        latitude,
+        longitude,
+      );
       if (weather == null) return;
 
       if (weather.temperature > settings.temperatureThreshold) {
@@ -134,15 +147,16 @@ class AutoModeMonitor {
   ) {
     if (!settings.wakeySensors) return;
 
-    final customTime = settings.wakeAtSunriseTime
-        ? null
-        : DateTime(
-            DateTime.now().year,
-            DateTime.now().month,
-            DateTime.now().day,
-            settings.wakeTime.hour,
-            settings.wakeTime.minute,
-          );
+    final customTime =
+        settings.wakeAtSunriseTime
+            ? null
+            : DateTime(
+              DateTime.now().year,
+              DateTime.now().month,
+              DateTime.now().day,
+              settings.wakeTime.hour,
+              settings.wakeTime.minute,
+            );
 
     final isTime = _timeService.isTimeForWakey(
       atDawnMode: settings.wakeAtSunriseTime,

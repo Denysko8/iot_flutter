@@ -1,3 +1,5 @@
+// ignore_for_file: lines_longer_than_80_chars
+
 /// Абстрактний інтерфейс репозиторію для управління розумним вікном
 abstract class ISmartWindowRepository {
   /// Підключення до MQTT брокера
@@ -76,7 +78,9 @@ abstract class ISmartWindowRepository {
 
   /// Підписатися на зворотний зв'язок від ESP8266
   /// [callback] - функція зворотного виклику для отримання повідомлень
-  void subscribeToFeedback(void Function(String topic, String message) callback);
+  void subscribeToFeedback(
+    void Function(String topic, String message) callback,
+  );
 
   /// Скасувати підписку на зворотний зв'язок
   void unsubscribeFromFeedback();
