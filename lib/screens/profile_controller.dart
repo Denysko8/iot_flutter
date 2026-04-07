@@ -62,6 +62,7 @@ class ProfileController {
         latitude: currentUser!.latitude,
         longitude: currentUser!.longitude,
       );
+      await ServiceLocator().mockApiStorageService.syncUser(currentUser!);
       return true;
     } else {
       errorMessage = result.errorMessage;
@@ -157,6 +158,7 @@ class ProfileController {
       // Зберігаємо в репозиторій
       await _userUseCase.userRepository.updateUser(updatedUser);
       await _userUseCase.userRepository.setCurrentUser(updatedUser);
+      await ServiceLocator().mockApiStorageService.syncUser(updatedUser);
 
       currentUser = updatedUser;
       successMessage = 'Локацію збережено: $city';

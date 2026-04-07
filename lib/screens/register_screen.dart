@@ -56,6 +56,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
         if (!mounted) return;
 
         if (loginResult.success) {
+          if (loginResult.user != null) {
+            await ServiceLocator().mockApiStorageService.syncUser(
+              loginResult.user!,
+            );
+            if (!mounted) return;
+          }
           Navigator.pushReplacement(
             context,
             MaterialPageRoute<void>(builder: (context) => const HomeScreen()),
@@ -83,9 +89,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Register'),
-      ),
+      appBar: AppBar(title: const Text('Register')),
       body: SafeArea(
         child: ResponsivePadding(
           child: SingleChildScrollView(

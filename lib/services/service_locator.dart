@@ -11,6 +11,7 @@ import 'package:iot_flutter/domain/validators/user_validator.dart';
 import 'package:iot_flutter/services/auto_mode_executor.dart';
 import 'package:iot_flutter/services/connectivity_service.dart';
 import 'package:iot_flutter/services/location_service.dart';
+import 'package:iot_flutter/services/mock_api_storage_service.dart';
 import 'package:iot_flutter/services/time_service.dart';
 import 'package:iot_flutter/services/weather_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -24,6 +25,7 @@ class ServiceLocator {
   late UserUseCase _userUseCase;
   late ISmartWindowRepository _smartWindowRepository;
   late ConnectivityService _connectivityService;
+  late MockApiStorageService _mockApiStorageService;
   late WeatherService _weatherService;
   late AutoModeExecutor _autoModeExecutor;
   late LocationService _locationService;
@@ -66,6 +68,12 @@ class ServiceLocator {
     // Ініціалізація сервісу підключення
     _connectivityService = ConnectivityService();
 
+    // Сервіс синхронізації з MockAPI + локальний кеш
+    _mockApiStorageService = MockApiStorageService(
+      prefs: _prefs,
+      connectivityService: _connectivityService,
+    );
+
     // Ініціалізація сервісів погоди, локації та часу
     _weatherService = WeatherService();
     _autoModeExecutor = AutoModeExecutor();
@@ -80,6 +88,7 @@ class ServiceLocator {
   UserUseCase get userUseCase => _userUseCase;
   ISmartWindowRepository get smartWindowRepository => _smartWindowRepository;
   ConnectivityService get connectivityService => _connectivityService;
+  MockApiStorageService get mockApiStorageService => _mockApiStorageService;
   WeatherService get weatherService => _weatherService;
   AutoModeExecutor get autoModeExecutor => _autoModeExecutor;
   LocationService get locationService => _locationService;

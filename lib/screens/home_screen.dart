@@ -3,6 +3,7 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:iot_flutter/models/auto_mode_settings.dart';
+import 'package:iot_flutter/models/cloud_sync_state.dart';
 import 'package:iot_flutter/screens/profile_screen.dart';
 import 'package:iot_flutter/services/service_locator.dart';
 import 'package:iot_flutter/widgets/auto_mode_controls.dart';
@@ -23,6 +24,7 @@ class _HomeScreenState extends State<HomeScreen> {
   AutoModeSettings _autoSettings = AutoModeSettings();
   bool _isConnectedToInternet = true;
   bool _isConnectedToMqtt = false;
+  Future<CloudSyncState?>? _cloudStateFuture;
 
   @override
   void initState() {
@@ -37,6 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _initializeConnections();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _restoreAutoModeExecutor();
+      _refreshCloudState();
     });
   }
 
@@ -127,6 +130,74 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _saveLastKnownPosition(int position) async {
     final validPosition = position.clamp(0, 100);
     await ServiceLocator().prefs.setInt('last_window_position', validPosition);
+  }
+
+  Future<CloudSyncState?> _loadCloudState() async {
+    final user = await ServiceLocator().userUseCase.getCurrentUser();
+    if (user == null) {
+      return null;
+    }
+
+    return ServiceLocator().mockApiStorageService.fetchLatestState(user.email);
+  }
+
+  void _refreshCloudState() {
+    setState(() {
+      _cloudStateFuture = _loadCloudState();
+    });
+  }
+
+  Map<String, String> _buildMqttTopicsSnapshot(AutoModeSettings settings) {
+    final selectedWeathers = settings.selectedWeathers.join(',');
+    final wakeTime =
+        '${settings.wakeTime.hour.toString().padLeft(2, '0')}:${settings.wakeTime.minute.toString().padLeft(2, '0')}';
+
+    return <String, String>{
+      'smart_window/manual/position': _sliderValue.round().toString(),
+      'smart_window/auto/wakey/state': settings.wakeySensors ? 'on' : 'off',
+      'smart_window/auto/wakey/mode':
+          settings.wakeAtSunriseTime ? 'at_dawn' : 'custom',
+      'smart_window/auto/wakey/time':
+          settings.wakeAtSunriseTime ? 'null' : wakeTime,
+      'smart_window/auto/wakey/minutes_before':
+          settings.wakeMinutesBefore.toString(),
+      'smart_window/auto/wakey/open_percent':
+          settings.wakeyOpenPercent.round().toString(),
+      'smart_window/auto/temp/state':
+          settings.temperatureControlEnabled ? 'on' : 'off',
+      'smart_window/auto/temp/threshold':
+          settings.temperatureThreshold.toString(),
+      'smart_window/auto/temp/closure':
+          settings.temperatureClosurePercent.round().toString(),
+      'smart_window/auto/weather/state':
+          settings.weatherControlEnabled ? 'on' : 'off',
+      'smart_window/auto/weather/conditions': selectedWeathers,
+      'smart_window/auto/weather/open_percent':
+          settings.weatherClosurePercent.round().toString(),
+      'smart_window/auto/save': 'save',
+    };
+  }
+
+  Future<void> _syncCurrentState({AutoModeSettings? settings}) async {
+    final user = await ServiceLocator().userUseCase.getCurrentUser();
+    if (user == null) {
+      return;
+    }
+
+    final activeSettings = settings ?? _autoSettings;
+    final snapshot = CloudSyncState(
+      user: user,
+      isAutoMode: _isAutoMode,
+      manualPosition: _sliderValue.round().clamp(0, 100),
+      autoSettings: activeSettings,
+      mqttBrokerIp:
+          ServiceLocator().prefs.getString('mqtt_broker_ip') ?? '192.168.0.102',
+      mqttTopics: _buildMqttTopicsSnapshot(activeSettings),
+      updatedAt: DateTime.now(),
+    );
+
+    await ServiceLocator().mockApiStorageService.syncState(snapshot);
+    _refreshCloudState();
   }
 
   Future<void> _saveAutoSettingsToPrefs(AutoModeSettings settings) async {
@@ -384,6 +455,8 @@ class _HomeScreenState extends State<HomeScreen> {
     } else {
       _showError('Немає підключення до MQTT брокера');
     }
+
+    await _syncCurrentState();
   }
 
   Future<void> _handleAutoModeChange(AutoModeSettings settings) async {
@@ -513,6 +586,8 @@ class _HomeScreenState extends State<HomeScreen> {
       final autoModeExecutor = ServiceLocator().autoModeExecutor;
       await autoModeExecutor.executeAutoModes(savedSettings);
       print('HomeScreen: Автоматичні режими запущено');
+
+      await _syncCurrentState(settings: savedSettings);
     } catch (e) {
       _showError('Помилка збереження налаштувань: $e');
     }
@@ -534,6 +609,79 @@ class _HomeScreenState extends State<HomeScreen> {
       _isAutoMode = !_isAutoMode;
     });
     print('HomeScreen: Режим змінено на ${_isAutoMode ? "Auto" : "Manual"}');
+    _syncCurrentState();
+  }
+
+  Widget _buildCloudStateCard() {
+    final future = _cloudStateFuture;
+    if (future == null) {
+      return const SizedBox.shrink();
+    }
+
+    return FutureBuilder<CloudSyncState?>(
+      future: future,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Card(
+            child: Padding(
+              padding: EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  SizedBox(width: 12),
+                  Text('Завантаження даних з API...'),
+                ],
+              ),
+            ),
+          );
+        }
+
+        final data = snapshot.data;
+        if (data == null) {
+          return const Card(
+            child: Padding(
+              padding: EdgeInsets.all(12),
+              child: Text('Дані з API ще не синхронізовані'),
+            ),
+          );
+        }
+
+        final sourceLabel = data.fromCache ? 'локальний кеш' : 'MockAPI';
+        final updated =
+            '${data.updatedAt.hour.toString().padLeft(2, '0')}:${data.updatedAt.minute.toString().padLeft(2, '0')}';
+
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Синхронізовані дані ($sourceLabel)',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 8),
+                Text('Користувач: ${data.user.name} (${data.user.email})'),
+                Text('Режим: ${data.isAutoMode ? "Auto" : "Manual"}'),
+                Text('Позиція: ${data.manualPosition}%'),
+                Text('Wakey: ${data.autoSettings.wakeySensors ? "on" : "off"}'),
+                Text(
+                  'Temperature: ${data.autoSettings.temperatureControlEnabled ? "on" : "off"}',
+                ),
+                Text(
+                  'Weather: ${data.autoSettings.weatherControlEnabled ? "on" : "off"}',
+                ),
+                Text('Оновлено: $updated'),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   void _navigateToProfile() {
@@ -624,6 +772,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     onSave: _handleSaveAutoSettings,
                     parentActive: _isAutoMode,
                   ),
+                const SizedBox(height: 16),
+                _buildCloudStateCard(),
                 const SizedBox(height: 32),
               ],
             ),

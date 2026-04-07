@@ -55,6 +55,10 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
 
       if (result.success) {
+        if (result.user != null) {
+          await ServiceLocator().mockApiStorageService.syncUser(result.user!);
+          if (!mounted) return;
+        }
         Navigator.pushReplacement(
           context,
           MaterialPageRoute<void>(builder: (context) => const HomeScreen()),

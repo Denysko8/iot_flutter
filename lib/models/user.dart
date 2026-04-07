@@ -21,8 +21,8 @@ class User {
       email: map['email'] as String,
       password: map['password'] as String,
       city: map['city'] as String?,
-      latitude: map['latitude'] as double?,
-      longitude: map['longitude'] as double?,
+      latitude: (map['latitude'] as num?)?.toDouble(),
+      longitude: (map['longitude'] as num?)?.toDouble(),
     );
   }
 
