@@ -36,56 +36,18 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
 
-  @override
-  State<SplashScreen> createState() => _SplashScreenState();
-}
-
-class _SplashScreenState extends State<SplashScreen> {
-  @override
-  void initState() {
-    super.initState();
-    _checkAutoLogin();
-  }
-
-  Future<void> _checkAutoLogin() async {
+  Future<bool> _shouldAutoLogin() async {
     // Перевірка чи є збережений користувач
     final userRepository = ServiceLocator().userRepository;
     final user = await userRepository.getCurrentUser();
 
-    if (user != null) {
-      // Користувач є, перевіряємо з'єднання
-      final connectivityService = ServiceLocator().connectivityService;
-      final hasConnection = await connectivityService.checkConnection();
-
-      if (!mounted) return;
-
-      if (!hasConnection) {
-        // Немає з'єднання - показуємо попередження, але дозволяємо доступ
-        _showNoInternetWarning();
-        await Future<void>.delayed(const Duration(seconds: 2));
-      }
-
-      // Переходимо на домашній екран
-      if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute<void>(builder: (context) => const HomeScreen()),
-      );
-    } else {
-      // Немає збереженого користувача - йдемо на логін
-      if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute<void>(builder: (context) => const LoginScreen()),
-      );
-    }
+    return user != null;
   }
 
-  void _showNoInternetWarning() {
-    if (!mounted) return;
+  void _showNoInternetWarning(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Row(
@@ -109,24 +71,57 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.window,
-              size: 100,
-              color: Theme.of(context).colorScheme.primary,
+      body: FutureBuilder<bool>(
+        future: _shouldAutoLogin(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            WidgetsBinding.instance.addPostFrameCallback((_) async {
+              final shouldAutoLogin = snapshot.data == true;
+              if (shouldAutoLogin) {
+                final connectivityService =
+                    ServiceLocator().connectivityService;
+                final hasConnection =
+                    await connectivityService.checkConnection();
+                if (!context.mounted) return;
+                if (!hasConnection) {
+                  _showNoInternetWarning(context);
+                  await Future<void>.delayed(const Duration(seconds: 2));
+                  if (!context.mounted) return;
+                }
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute<void>(builder: (_) => const HomeScreen()),
+                );
+                return;
+              }
+
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute<void>(builder: (_) => const LoginScreen()),
+              );
+            });
+          }
+
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.window,
+                  size: 100,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  'Smart Blinds',
+                  style: Theme.of(context).textTheme.headlineLarge,
+                ),
+                const SizedBox(height: 48),
+                const CircularProgressIndicator(),
+              ],
             ),
-            const SizedBox(height: 24),
-            Text(
-              'Smart Blinds',
-              style: Theme.of(context).textTheme.headlineLarge,
-            ),
-            const SizedBox(height: 48),
-            const CircularProgressIndicator(),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

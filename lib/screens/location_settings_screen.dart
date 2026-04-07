@@ -1,16 +1,14 @@
 // ignore_for_file: lines_longer_than_80_chars
 
 import 'package:flutter/material.dart';
-import 'package:iot_flutter/screens/profile_controller.dart';
-import 'package:iot_flutter/services/service_locator.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:iot_flutter/cubits/profile_cubit.dart';
 import 'package:iot_flutter/widgets/custom_button.dart';
 import 'package:iot_flutter/widgets/custom_text_field.dart';
 import 'package:iot_flutter/widgets/responsive_padding.dart';
 
 class LocationSettingsScreen extends StatefulWidget {
-  final ProfileController controller;
-
-  const LocationSettingsScreen({required this.controller, super.key});
+  const LocationSettingsScreen({super.key});
 
   @override
   State<LocationSettingsScreen> createState() => _LocationSettingsScreenState();
@@ -36,7 +34,7 @@ class _LocationSettingsScreenState extends State<LocationSettingsScreen> {
   }
 
   void _loadCurrentLocation() {
-    final user = widget.controller.currentUser;
+    final user = context.read<ProfileCubit>().state.currentUser;
     if (user != null && user.city != null) {
       setState(() {
         _currentCity = user.city;
@@ -46,48 +44,12 @@ class _LocationSettingsScreenState extends State<LocationSettingsScreen> {
     }
   }
 
-  Future<bool> _ensureInternetConnection() async {
-    final hasInternet =
-        await ServiceLocator().connectivityService.checkConnection();
-    if (hasInternet) {
-      return true;
-    }
-
-    if (!mounted) {
-      return false;
-    }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.wifi_off, color: Colors.white),
-            SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                'Відсутнє підключення до Інтернету. Спробуйте підключитися до мережі.',
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: Colors.orange,
-        duration: Duration(seconds: 3),
-      ),
-    );
-    return false;
-  }
-
   Future<void> _getCurrentLocation() async {
-    if (!await _ensureInternetConnection()) {
-      return;
-    }
-
     setState(() {
       _isLoading = true;
-      widget.controller.clearErrorMessage();
     });
 
-    final location = await widget.controller.getCurrentLocation();
+    final location = await context.read<ProfileCubit>().getCurrentLocation();
 
     if (mounted) {
       setState(() {
@@ -109,16 +71,11 @@ class _LocationSettingsScreenState extends State<LocationSettingsScreen> {
       return;
     }
 
-    if (!await _ensureInternetConnection()) {
-      return;
-    }
-
     setState(() {
       _isLoading = true;
-      widget.controller.clearErrorMessage();
     });
 
-    final location = await widget.controller.setLocationByCity(
+    final location = await context.read<ProfileCubit>().setLocationByCity(
       _cityController.text.trim(),
     );
 
@@ -143,7 +100,7 @@ class _LocationSettingsScreenState extends State<LocationSettingsScreen> {
       return;
     }
 
-    final success = await widget.controller.saveLocation(
+    final success = await context.read<ProfileCubit>().saveLocation(
       _currentCity!,
       _currentLat!,
       _currentLon!,
@@ -227,7 +184,8 @@ class _LocationSettingsScreenState extends State<LocationSettingsScreen> {
                   ),
                   const SizedBox(height: 24),
                 ],
-                if (widget.controller.errorMessage != null) ...[
+                if (context.watch<ProfileCubit>().state.errorMessage !=
+                    null) ...[
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
@@ -236,7 +194,7 @@ class _LocationSettingsScreenState extends State<LocationSettingsScreen> {
                       border: Border.all(color: Colors.red.shade400),
                     ),
                     child: Text(
-                      widget.controller.errorMessage!,
+                      context.watch<ProfileCubit>().state.errorMessage!,
                       style: TextStyle(color: Colors.red.shade900),
                     ),
                   ),

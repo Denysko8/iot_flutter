@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:iot_flutter/widgets/setting_card.dart';
 
-class WeatherControl extends StatefulWidget {
+class WeatherControl extends StatelessWidget {
   final bool enabled;
   final ValueChanged<bool> onEnabledChanged;
   final Set<String> selected;
@@ -22,37 +22,13 @@ class WeatherControl extends StatefulWidget {
   });
 
   @override
-  State<WeatherControl> createState() => _WeatherControlState();
-}
-
-class _WeatherControlState extends State<WeatherControl> {
-  late double _localClosurePercent;
-
-  @override
-  void initState() {
-    super.initState();
-    _localClosurePercent = widget.closurePercent;
-  }
-
-  @override
-  void didUpdateWidget(WeatherControl oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.closurePercent != oldWidget.closurePercent) {
-      _localClosurePercent = widget.closurePercent;
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
     return SettingCard(
       title: 'Weather Control',
       icon: Icons.cloud,
-      trailing: Switch(
-        value: widget.enabled,
-        onChanged: widget.onEnabledChanged,
-      ),
+      trailing: Switch(value: enabled, onChanged: onEnabledChanged),
       child:
-          widget.enabled
+          enabled
               ? Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -81,42 +57,24 @@ class _WeatherControlState extends State<WeatherControl> {
                       Text(
                         'Open to:',
                         style: TextStyle(
-                          color:
-                              widget.selected.isEmpty
-                                  ? Colors.grey
-                                  : Colors.black,
+                          color: selected.isEmpty ? Colors.grey : Colors.black,
                         ),
                       ),
                       Text(
-                        '${_localClosurePercent.round()}%',
+                        '${closurePercent.round()}%',
                         style: TextStyle(
-                          color:
-                              widget.selected.isEmpty
-                                  ? Colors.grey
-                                  : Colors.black,
+                          color: selected.isEmpty ? Colors.grey : Colors.black,
                         ),
                       ),
                     ],
                   ),
                   Slider(
-                    value: _localClosurePercent,
+                    value: closurePercent,
                     max: 100,
                     divisions: 100,
-                    label: '${_localClosurePercent.round()}%',
+                    label: '${closurePercent.round()}%',
                     onChanged:
-                        widget.selected.isEmpty
-                            ? null
-                            : (v) {
-                              setState(() {
-                                _localClosurePercent = v;
-                              });
-                            },
-                    onChangeEnd:
-                        widget.selected.isEmpty
-                            ? null
-                            : (v) {
-                              widget.onClosurePercentChanged(v);
-                            },
+                        selected.isEmpty ? null : onClosurePercentChanged,
                   ),
                 ],
               )
@@ -129,8 +87,8 @@ class _WeatherControlState extends State<WeatherControl> {
     String weather,
     IconData icon,
   ) {
-    final isSelected = widget.selected.contains(weather);
-    final canSelect = widget.selected.length < 3 || isSelected;
+    final isSelected = selected.contains(weather);
+    final canSelect = selected.length < 3 || isSelected;
     return FilterChip(
       label: Row(
         mainAxisSize: MainAxisSize.min,
@@ -144,13 +102,13 @@ class _WeatherControlState extends State<WeatherControl> {
       onSelected:
           canSelect
               ? (sel) {
-                final newSet = Set<String>.from(widget.selected);
+                final newSet = Set<String>.from(selected);
                 if (sel) {
                   newSet.add(weather);
                 } else {
                   newSet.remove(weather);
                 }
-                widget.onSelectedChanged(newSet);
+                onSelectedChanged(newSet);
               }
               : null,
     );
