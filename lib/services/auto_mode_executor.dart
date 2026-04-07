@@ -12,6 +12,7 @@ class AutoModeExecutor {
   DateTime? _cachedSunriseDate;
   DateTime? _cachedSunriseTime;
   AutoModeSettings? _wakeySettings;
+  bool _isWakeyExecutionInProgress = false;
 
   bool _isRunning = false;
 
@@ -53,7 +54,9 @@ class AutoModeExecutor {
   void _startWakeyScheduler(AutoModeSettings settings) {
     _wakeySettings = settings;
     _wakeyTimer?.cancel();
+    _checkTimer?.cancel();
     _checkAndExecuteWakey(settings);
+    _scheduleExactWakeyTimer(settings);
     _wakeyTimer = Timer.periodic(const Duration(minutes: 1), _handleWakeyTick);
   }
 
@@ -62,6 +65,55 @@ class AutoModeExecutor {
     if (settings == null) {
       return;
     }
+    if (_checkTimer == null || !_checkTimer!.isActive) {
+      _scheduleExactWakeyTimer(settings);
+    }
+    _checkAndExecuteWakey(settings);
+  }
+
+  Future<void> _scheduleExactWakeyTimer(AutoModeSettings settings) async {
+    _checkTimer?.cancel();
+
+    final now = DateTime.now();
+    final targetDateTime = await _resolveWakeyTargetDateTime(settings, now);
+    if (targetDateTime == null) {
+      print('AutoModeExecutor: Exact timer не заплановано - немає target time');
+      return;
+    }
+
+    final minutesBefore = settings.wakeMinutesBefore.clamp(0, 60);
+    final triggerDateTime = targetDateTime.subtract(
+      Duration(minutes: minutesBefore),
+    );
+
+    if (!now.isBefore(targetDateTime)) {
+      print(
+        'AutoModeExecutor: Exact timer не заплановано - час на сьогодні вже минув',
+      );
+      return;
+    }
+
+    final delay =
+        triggerDateTime.isAfter(now)
+            ? triggerDateTime.difference(now)
+            : Duration.zero;
+
+    print(
+      'AutoModeExecutor: Exact Wakey timer заплановано на '
+      '${triggerDateTime.hour.toString().padLeft(2, '0')}:${triggerDateTime.minute.toString().padLeft(2, '0')} '
+      '(через ${delay.inMinutes} хв ${delay.inSeconds % 60} с)',
+    );
+
+    _checkTimer = Timer(delay, _handleExactWakeyTimerFired);
+  }
+
+  void _handleExactWakeyTimerFired() {
+    final settings = _wakeySettings;
+    if (settings == null) {
+      return;
+    }
+
+    print('AutoModeExecutor: Exact Wakey timer спрацював');
     _checkAndExecuteWakey(settings);
   }
 
@@ -70,6 +122,10 @@ class AutoModeExecutor {
     if (!_isRunning) {
       return;
     }
+    if (_isWakeyExecutionInProgress) {
+      return;
+    }
+    _isWakeyExecutionInProgress = true;
 
     try {
       final now = DateTime.now();
@@ -168,6 +224,8 @@ class AutoModeExecutor {
     } catch (e) {
       print('AutoModeExecutor: Помилка перевірки Wakey - $e');
       print('═══════════════════════════════════════════════');
+    } finally {
+      _isWakeyExecutionInProgress = false;
     }
   }
 
@@ -178,6 +236,16 @@ class AutoModeExecutor {
     required int position,
   }) async {
     final mqttRepo = ServiceLocator().smartWindowRepository;
+
+    if (!mqttRepo.isConnected) {
+      print('AutoModeExecutor: MQTT не підключено, спроба перепідключення...');
+      final connected = await mqttRepo.connect();
+      if (!connected) {
+        throw Exception('MQTT не підключено, execute Wakey не відправлено');
+      }
+      print('AutoModeExecutor: MQTT перепідключено успішно');
+    }
+
     final targetTimeString =
         '${targetDateTime.hour.toString().padLeft(2, '0')}:${targetDateTime.minute.toString().padLeft(2, '0')}';
     final mode = settings.wakeAtSunriseTime ? 'at_dawn' : 'custom';
@@ -454,6 +522,7 @@ class AutoModeExecutor {
     _cachedSunriseDate = null;
     _cachedSunriseTime = null;
     _wakeySettings = null;
+    _isWakeyExecutionInProgress = false;
     _isRunning = false;
     print('AutoModeExecutor: Зупинено');
   }
