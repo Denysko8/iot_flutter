@@ -1,84 +1,65 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:iot_flutter/cubits/profile_cubit.dart';
+import 'package:iot_flutter/screens/location_settings_screen.dart';
 import 'package:iot_flutter/screens/login_screen.dart';
-import 'package:iot_flutter/screens/profile_controller.dart';
-import 'package:iot_flutter/screens/profile_layout.dart';
+import 'package:iot_flutter/screens/mqtt_settings_screen.dart';
+import 'package:iot_flutter/services/service_locator.dart';
 import 'package:iot_flutter/widgets/custom_button.dart';
+import 'package:iot_flutter/widgets/responsive_padding.dart';
 
-class ProfileScreen extends StatefulWidget {
+class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider<ProfileCubit>(
+      create:
+          (_) => ProfileCubit(
+            userUseCase: ServiceLocator().userUseCase,
+            locationService: ServiceLocator().locationService,
+            connectivityService: ServiceLocator().connectivityService,
+            mockApiStorageService: ServiceLocator().mockApiStorageService,
+          )..loadUser(),
+      child: const _ProfileView(),
+    );
+  }
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
-  late ProfileController _controller;
-  late TextEditingController _nameController;
-  late TextEditingController _emailController;
+class _ProfileView extends StatefulWidget {
+  const _ProfileView();
+
+  @override
+  State<_ProfileView> createState() => _ProfileViewState();
+}
+
+class _ProfileViewState extends State<_ProfileView> {
+  late final TextEditingController _nameController;
+  late final TextEditingController _emailController;
 
   @override
   void initState() {
     super.initState();
-    _controller = ProfileController();
     _nameController = TextEditingController();
     _emailController = TextEditingController();
-    _loadUser();
   }
 
-  Future<void> _loadUser() async {
-    await _controller.loadUser();
-    if (!mounted) return;
-
-    setState(() {
-      if (_controller.currentUser != null) {
-        _nameController.text = _controller.currentUser!.name;
-        _emailController.text = _controller.currentUser!.email;
-      }
-    });
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    super.dispose();
   }
 
-  void _toggleEditMode() {
-    setState(() {
-      _controller.toggleEditMode();
-    });
-  }
-
-  void _handleSaveChanges() async {
-    final success = await _controller.saveChanges(
-      _nameController.text.trim(),
-      _emailController.text.trim(),
-    );
-
-    if (!mounted) return;
-
-    if (success) {
-      setState(() {
-        _nameController.text = _controller.currentUser!.name;
-        _emailController.text = _controller.currentUser!.email;
-      });
-
-      Future.delayed(const Duration(seconds: 2), () {
-        if (mounted) {
-          setState(() {
-            _controller.clearSuccessMessage();
-          });
-        }
-      });
-    }
-
-    setState(() {});
-  }
-
-  void _handleDeleteAccount() async {
-    final navContext = context;
+  Future<void> _confirmDelete(BuildContext context) async {
     final confirmed = await showDialog<bool>(
-      context: navContext,
+      context: context,
       builder:
           (context) => AlertDialog(
             title: const Text('Видалити акаунт'),
             content: const Text(
               'Ви впевнені, що хочете видалити акаунт? '
-              'Цю дію неможливо буде скасувати.',
+              'Цю дію неможливо скасувати.',
             ),
             actions: [
               TextButton(
@@ -97,82 +78,188 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
 
     if (confirmed == true) {
-      final success = await _controller.deleteAccount();
-      if (success && mounted) {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute<void>(builder: (context) => const LoginScreen()),
-          (route) => false,
-        );
-      }
+      if (!context.mounted) return;
+      await context.read<ProfileCubit>().deleteAccount();
     }
-  }
-
-  void _handleLogout() async {
-    await _controller.logout();
-    if (!mounted) return;
-
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute<void>(builder: (context) => const LoginScreen()),
-      (route) => false,
-    );
-  }
-
-  void _handleLocationUpdated() async {
-    setState(() {
-      // Перезавантажити профіль після оновлення локації
-    });
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_controller.isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
+    return BlocConsumer<ProfileCubit, ProfileState>(
+      listener: (context, state) {
+        if (state.currentUser != null && !state.isEditing) {
+          _nameController.text = state.currentUser!.name;
+          _emailController.text = state.currentUser!.email;
+        }
 
-    if (_controller.currentUser == null) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Profile')),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text('Користувач не авторизований'),
-              const SizedBox(height: 16),
-              CustomButton(
+        if (state.successMessage != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.successMessage!),
+              backgroundColor: Colors.green,
+            ),
+          );
+          context.read<ProfileCubit>().clearSuccessMessage();
+        }
+
+        if (state.loggedOut || state.accountDeleted) {
+          context.read<ProfileCubit>().clearNavigationFlags();
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute<void>(builder: (_) => const LoginScreen()),
+            (_) => false,
+          );
+        }
+      },
+      builder: (context, state) {
+        if (state.isLoading) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (state.currentUser == null) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Profile')),
+            body: Center(
+              child: CustomButton(
                 text: 'Go to Login',
                 onPressed:
                     () => Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute<void>(
-                        builder: (context) => const LoginScreen(),
+                        builder: (_) => const LoginScreen(),
                       ),
-                      (route) => false,
+                      (_) => false,
                     ),
+              ),
+            ),
+          );
+        }
+
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Profile'),
+            actions: [
+              IconButton(
+                icon: Icon(state.isEditing ? Icons.close : Icons.edit),
+                onPressed: () => context.read<ProfileCubit>().toggleEditMode(),
               ),
             ],
           ),
-        ),
-      );
-    }
-
-    return ProfileLayout(
-      controller: _controller,
-      nameController: _nameController,
-      emailController: _emailController,
-      onToggleEdit: _toggleEditMode,
-      onSaveChanges: _handleSaveChanges,
-      onLogout: _handleLogout,
-      onDeleteAccount: _handleDeleteAccount,
-      onLocationUpdated: _handleLocationUpdated,
+          body: SafeArea(
+            child: ResponsivePadding(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    const SizedBox(height: 32),
+                    CircleAvatar(
+                      radius: 60,
+                      backgroundColor:
+                          Theme.of(context).colorScheme.primaryContainer,
+                      child: Icon(
+                        Icons.person,
+                        size: 64,
+                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    if (state.isEditing) ...[
+                      TextField(
+                        controller: _nameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Full Name',
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: _emailController,
+                        decoration: const InputDecoration(labelText: 'Email'),
+                        keyboardType: TextInputType.emailAddress,
+                      ),
+                    ] else ...[
+                      Text(
+                        state.currentUser!.name,
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(state.currentUser!.email),
+                    ],
+                    if (state.errorMessage != null) ...[
+                      const SizedBox(height: 16),
+                      Text(
+                        state.errorMessage!,
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                    ],
+                    const SizedBox(height: 24),
+                    ListTile(
+                      leading: const Icon(Icons.location_on),
+                      title: const Text('Локація'),
+                      subtitle: Text(
+                        state.currentUser?.city ?? 'Не встановлено',
+                      ),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.edit_location),
+                        onPressed: () async {
+                          final result = await Navigator.push<bool>(
+                            context,
+                            MaterialPageRoute<bool>(
+                              builder:
+                                  (_) => BlocProvider.value(
+                                    value: context.read<ProfileCubit>(),
+                                    child: const LocationSettingsScreen(),
+                                  ),
+                            ),
+                          );
+                          if (!context.mounted) return;
+                          if (result == true) {
+                            await context.read<ProfileCubit>().loadUser();
+                          }
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    if (state.isEditing)
+                      CustomButton(
+                        text: 'Save Changes',
+                        onPressed:
+                            () => context.read<ProfileCubit>().saveChanges(
+                              _nameController.text.trim(),
+                              _emailController.text.trim(),
+                            ),
+                      ),
+                    const SizedBox(height: 16),
+                    CustomButton(
+                      text: 'MQTT Settings',
+                      isPrimary: false,
+                      onPressed:
+                          () => Navigator.push(
+                            context,
+                            MaterialPageRoute<void>(
+                              builder: (_) => const MqttSettingsScreen(),
+                            ),
+                          ),
+                    ),
+                    const SizedBox(height: 16),
+                    CustomButton(
+                      text: 'Logout',
+                      isPrimary: false,
+                      onPressed: () => context.read<ProfileCubit>().logout(),
+                    ),
+                    const SizedBox(height: 16),
+                    CustomButton(
+                      text: 'Delete Account',
+                      isPrimary: false,
+                      onPressed: () => _confirmDelete(context),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _emailController.dispose();
-    super.dispose();
   }
 }

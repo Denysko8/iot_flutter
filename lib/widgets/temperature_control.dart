@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:iot_flutter/widgets/setting_card.dart';
 
-class TemperatureControl extends StatefulWidget {
+class TemperatureControl extends StatelessWidget {
   final bool enabled;
   final ValueChanged<bool> onEnabledChanged;
   final double threshold;
@@ -22,86 +22,43 @@ class TemperatureControl extends StatefulWidget {
   });
 
   @override
-  State<TemperatureControl> createState() => _TemperatureControlState();
-}
-
-class _TemperatureControlState extends State<TemperatureControl> {
-  late double _localThreshold;
-  late double _localClosurePercent;
-
-  @override
-  void initState() {
-    super.initState();
-    _localThreshold = widget.threshold;
-    _localClosurePercent = widget.closurePercent;
-  }
-
-  @override
-  void didUpdateWidget(TemperatureControl oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.threshold != oldWidget.threshold) {
-      _localThreshold = widget.threshold;
-    }
-    if (widget.closurePercent != oldWidget.closurePercent) {
-      _localClosurePercent = widget.closurePercent;
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
     return SettingCard(
       title: 'Temperature Control',
       icon: Icons.thermostat,
-      trailing: Switch(
-        value: widget.enabled,
-        onChanged: widget.onEnabledChanged,
-      ),
+      trailing: Switch(value: enabled, onChanged: onEnabledChanged),
       child:
-          widget.enabled
+          enabled
               ? Column(
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text('Threshold:'),
-                      Text('${_localThreshold.round()}°C'),
+                      Text('${threshold.round()}°C'),
                     ],
                   ),
                   Slider(
-                    value: _localThreshold,
+                    value: threshold,
                     min: 15,
                     max: 40,
                     divisions: 25,
-                    label: '${_localThreshold.round()}°C',
-                    onChanged: (v) {
-                      setState(() {
-                        _localThreshold = v;
-                      });
-                    },
-                    onChangeEnd: (v) {
-                      widget.onThresholdChanged(v);
-                    },
+                    label: '${threshold.round()}°C',
+                    onChanged: onThresholdChanged,
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text('Close by:'),
-                      Text('${_localClosurePercent.round()}%'),
+                      Text('${closurePercent.round()}%'),
                     ],
                   ),
                   Slider(
-                    value: _localClosurePercent,
+                    value: closurePercent,
                     max: 100,
                     divisions: 100,
-                    label: '${_localClosurePercent.round()}%',
-                    onChanged: (v) {
-                      setState(() {
-                        _localClosurePercent = v;
-                      });
-                    },
-                    onChangeEnd: (v) {
-                      widget.onClosurePercentChanged(v);
-                    },
+                    label: '${closurePercent.round()}%',
+                    onChanged: onClosurePercentChanged,
                   ),
                 ],
               )

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:iot_flutter/widgets/setting_card.dart';
 
-class WakeySettings extends StatefulWidget {
+class WakeySettings extends StatelessWidget {
   final bool enabled;
   final ValueChanged<bool> onEnabledChanged;
   final bool atSunrise;
@@ -30,64 +30,35 @@ class WakeySettings extends StatefulWidget {
   });
 
   @override
-  State<WakeySettings> createState() => _WakeySettingsState();
-}
-
-class _WakeySettingsState extends State<WakeySettings> {
-  late double _localMinutesBefore;
-  late double _localOpenPercent;
-
-  @override
-  void initState() {
-    super.initState();
-    _localMinutesBefore = widget.minutesBefore.toDouble();
-    _localOpenPercent = widget.openPercent;
-  }
-
-  @override
-  void didUpdateWidget(WakeySettings oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.minutesBefore != oldWidget.minutesBefore) {
-      _localMinutesBefore = widget.minutesBefore.toDouble();
-    }
-    if (widget.openPercent != oldWidget.openPercent) {
-      _localOpenPercent = widget.openPercent;
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final showExpanded = widget.enabled && widget.parentActive;
+    final showExpanded = enabled && parentActive;
     return SettingCard(
       title: 'Wakey, wakey!',
       icon: Icons.wb_sunny,
-      trailing: Switch(
-        value: widget.enabled,
-        onChanged: widget.onEnabledChanged,
-      ),
+      trailing: Switch(value: enabled, onChanged: onEnabledChanged),
       child:
           showExpanded
               ? Column(
                 children: [
                   CheckboxListTile(
                     title: const Text('At dawn'),
-                    value: widget.atSunrise,
+                    value: atSunrise,
                     onChanged: (v) {
-                      widget.onAtSunriseChanged(v ?? true);
+                      onAtSunriseChanged(v ?? true);
                     },
                     contentPadding: EdgeInsets.zero,
                     controlAffinity: ListTileControlAffinity.leading,
                   ),
                   InkWell(
                     onTap:
-                        widget.atSunrise
+                        atSunrise
                             ? null
                             : () async {
                               final picked = await showTimePicker(
                                 context: context,
-                                initialTime: widget.time,
+                                initialTime: time,
                               );
-                              if (picked != null) widget.onTimeChanged(picked);
+                              if (picked != null) onTimeChanged(picked);
                             },
                     child: Container(
                       padding: const EdgeInsets.symmetric(
@@ -96,10 +67,7 @@ class _WakeySettingsState extends State<WakeySettings> {
                       ),
                       decoration: BoxDecoration(
                         border: Border.all(
-                          color:
-                              widget.atSunrise
-                                  ? Colors.grey.shade300
-                                  : Colors.blue,
+                          color: atSunrise ? Colors.grey.shade300 : Colors.blue,
                         ),
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -109,16 +77,14 @@ class _WakeySettingsState extends State<WakeySettings> {
                           Text(
                             'Wake up time:',
                             style: TextStyle(
-                              color:
-                                  widget.atSunrise ? Colors.grey : Colors.black,
+                              color: atSunrise ? Colors.grey : Colors.black,
                             ),
                           ),
                           Text(
-                            widget.time.format(context),
+                            time.format(context),
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              color:
-                                  widget.atSunrise ? Colors.grey : Colors.black,
+                              color: atSunrise ? Colors.grey : Colors.black,
                             ),
                           ),
                         ],
@@ -132,58 +98,41 @@ class _WakeySettingsState extends State<WakeySettings> {
                       Text(
                         'Launch before waking up:',
                         style: TextStyle(
-                          color: widget.atSunrise ? Colors.grey : Colors.black,
+                          color: atSunrise ? Colors.grey : Colors.black,
                         ),
                       ),
                       Text(
-                        '${_localMinutesBefore.round()} min',
+                        '$minutesBefore min',
                         style: TextStyle(
-                          color: widget.atSunrise ? Colors.grey : Colors.black,
+                          color: atSunrise ? Colors.grey : Colors.black,
                         ),
                       ),
                     ],
                   ),
                   Slider(
-                    value: _localMinutesBefore,
+                    value: minutesBefore.toDouble(),
                     max: 60,
                     divisions: 60,
-                    label: '${_localMinutesBefore.round()} min',
+                    label: '$minutesBefore min',
                     onChanged:
-                        widget.atSunrise
+                        atSunrise
                             ? null
-                            : (v) {
-                              setState(() {
-                                _localMinutesBefore = v;
-                              });
-                            },
-                    onChangeEnd:
-                        widget.atSunrise
-                            ? null
-                            : (v) {
-                              widget.onMinutesBeforeChanged(v.round());
-                            },
+                            : (v) => onMinutesBeforeChanged(v.round()),
                   ),
                   const SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text('Open to:'),
-                      Text('${_localOpenPercent.round()}%'),
+                      Text('${openPercent.round()}%'),
                     ],
                   ),
                   Slider(
-                    value: _localOpenPercent,
+                    value: openPercent,
                     max: 100,
                     divisions: 100,
-                    label: '${_localOpenPercent.round()}%',
-                    onChanged: (v) {
-                      setState(() {
-                        _localOpenPercent = v;
-                      });
-                    },
-                    onChangeEnd: (v) {
-                      widget.onOpenPercentChanged(v);
-                    },
+                    label: '${openPercent.round()}%',
+                    onChanged: onOpenPercentChanged,
                   ),
                 ],
               )

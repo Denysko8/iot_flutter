@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:iot_flutter/cubits/profile_cubit.dart';
 import 'package:iot_flutter/screens/location_settings_screen.dart';
 import 'package:iot_flutter/screens/mqtt_settings_screen.dart';
 import 'package:iot_flutter/screens/profile_controller.dart';
+import 'package:iot_flutter/services/service_locator.dart';
 import 'package:iot_flutter/widgets/custom_button.dart';
 import 'package:iot_flutter/widgets/responsive_padding.dart';
 
@@ -161,8 +164,21 @@ class ProfileLayout extends StatelessWidget {
                             context,
                             MaterialPageRoute<bool>(
                               builder:
-                                  (context) => LocationSettingsScreen(
-                                    controller: controller,
+                                  (context) => BlocProvider<ProfileCubit>(
+                                    create:
+                                        (_) => ProfileCubit(
+                                          userUseCase:
+                                              ServiceLocator().userUseCase,
+                                          locationService:
+                                              ServiceLocator().locationService,
+                                          connectivityService:
+                                              ServiceLocator()
+                                                  .connectivityService,
+                                          mockApiStorageService:
+                                              ServiceLocator()
+                                                  .mockApiStorageService,
+                                        )..loadUser(),
+                                    child: const LocationSettingsScreen(),
                                   ),
                             ),
                           );

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:iot_flutter/cubits/auth_cubit.dart';
 import 'package:iot_flutter/screens/home_screen.dart';
 import 'package:iot_flutter/screens/register_screen.dart';
 import 'package:iot_flutter/services/service_locator.dart';
@@ -16,8 +18,6 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _isLoading = false;
-  String? _errorMessage;
 
   @override
   void dispose() {
@@ -27,55 +27,10 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _handleLogin() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    try {
-      // Перевірка підключення до Інтернету
-      final connectivityService = ServiceLocator().connectivityService;
-      final hasConnection = await connectivityService.checkConnection();
-
-      if (!hasConnection) {
-        if (!mounted) return;
-        _showNoInternetDialog();
-        setState(() {
-          _isLoading = false;
-        });
-        return;
-      }
-
-      final userUseCase = ServiceLocator().userUseCase;
-      final result = await userUseCase.loginUser(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-      );
-
-      if (!mounted) return;
-
-      if (result.success) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute<void>(builder: (context) => const HomeScreen()),
-        );
-      } else {
-        setState(() {
-          _errorMessage = result.errorMessage;
-        });
-      }
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _errorMessage = 'Сталася помилка при логуванні';
-      });
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
+    context.read<AuthCubit>().login(
+      email: _emailController.text.trim(),
+      password: _passwordController.text,
+    );
   }
 
   void _showNoInternetDialog() {
@@ -113,70 +68,94 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: ResponsivePadding(
-          child: Center(
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.window,
-                    size: 80,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  const SizedBox(height: 24),
-                  Text(
-                    'Smart Blinds',
-                    style: Theme.of(context).textTheme.headlineLarge,
-                  ),
-                  const SizedBox(height: 48),
-                  CustomTextField(
-                    controller: _emailController,
-                    label: 'Email',
-                    icon: Icons.email,
-                    keyboardType: TextInputType.emailAddress,
-                    enabled: !_isLoading,
-                  ),
-                  const SizedBox(height: 16),
-                  CustomTextField(
-                    controller: _passwordController,
-                    label: 'Password',
-                    icon: Icons.lock,
-                    isPassword: true,
-                    enabled: !_isLoading,
-                  ),
-                  if (_errorMessage != null) ...[
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.red.shade100,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.red.shade400),
-                      ),
-                      child: Text(
-                        _errorMessage!,
-                        style: TextStyle(color: Colors.red.shade900),
-                      ),
+    return BlocProvider<AuthCubit>(
+      create:
+          (_) => AuthCubit(
+            userUseCase: ServiceLocator().userUseCase,
+            connectivityService: ServiceLocator().connectivityService,
+            mockApiStorageService: ServiceLocator().mockApiStorageService,
+          ),
+      child: BlocConsumer<AuthCubit, AuthState>(
+        listener: (context, state) {
+          if (state.status == AuthStatus.noInternet) {
+            _showNoInternetDialog();
+          }
+          if (state.status == AuthStatus.success) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute<void>(builder: (_) => const HomeScreen()),
+            );
+          }
+        },
+        builder: (context, state) {
+          final isLoading = state.status == AuthStatus.loading;
+          return Scaffold(
+            body: SafeArea(
+              child: ResponsivePadding(
+                child: Center(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.window,
+                          size: 80,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(height: 24),
+                        Text(
+                          'Smart Blinds',
+                          style: Theme.of(context).textTheme.headlineLarge,
+                        ),
+                        const SizedBox(height: 48),
+                        CustomTextField(
+                          controller: _emailController,
+                          label: 'Email',
+                          icon: Icons.email,
+                          keyboardType: TextInputType.emailAddress,
+                          enabled: !isLoading,
+                        ),
+                        const SizedBox(height: 16),
+                        CustomTextField(
+                          controller: _passwordController,
+                          label: 'Password',
+                          icon: Icons.lock,
+                          isPassword: true,
+                          enabled: !isLoading,
+                        ),
+                        if (state.message != null) ...[
+                          const SizedBox(height: 16),
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.red.shade100,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.red.shade400),
+                            ),
+                            child: Text(
+                              state.message!,
+                              style: TextStyle(color: Colors.red.shade900),
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 32),
+                        CustomButton(
+                          text: isLoading ? 'Завантаження...' : 'Login',
+                          onPressed: isLoading ? null : _handleLogin,
+                        ),
+                        const SizedBox(height: 16),
+                        TextButton(
+                          onPressed: isLoading ? null : _navigateToRegister,
+                          child: const Text('Don\'t have an account? Register'),
+                        ),
+                      ],
                     ),
-                  ],
-                  const SizedBox(height: 32),
-                  CustomButton(
-                    text: _isLoading ? 'Завантаження...' : 'Login',
-                    onPressed: _isLoading ? null : _handleLogin,
                   ),
-                  const SizedBox(height: 16),
-                  TextButton(
-                    onPressed: _isLoading ? null : _navigateToRegister,
-                    child: const Text('Don\'t have an account? Register'),
-                  ),
-                ],
+                ),
               ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
