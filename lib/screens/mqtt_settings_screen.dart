@@ -1,11 +1,15 @@
+import 'dart:io' show Platform;
+
 // ignore_for_file: lines_longer_than_80_chars
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iot_flutter/cubits/mqtt_settings_cubit.dart';
 import 'package:iot_flutter/widgets/custom_button.dart';
 import 'package:iot_flutter/widgets/custom_text_field.dart';
 import 'package:iot_flutter/widgets/responsive_padding.dart';
+import 'package:secret_flashlight_plugin/secret_flashlight_plugin.dart';
 
 class MqttSettingsScreen extends StatefulWidget {
   const MqttSettingsScreen({super.key});
@@ -16,6 +20,42 @@ class MqttSettingsScreen extends StatefulWidget {
 
 class _MqttSettingsScreenState extends State<MqttSettingsScreen> {
   final _brokerIpController = TextEditingController();
+
+  void _showUnsupportedPlatformDialog() {
+    showDialog<void>(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Недоступно'),
+            content: const Text(
+              'Функціонал ліхтарика підтримується лише на Android.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+    );
+  }
+
+  void _showFlashlightErrorDialog(String message) {
+    showDialog<void>(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Помилка'),
+            content: Text(message),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+    );
+  }
 
   @override
   void initState() {
@@ -53,10 +93,25 @@ class _MqttSettingsScreenState extends State<MqttSettingsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const SizedBox(height: 24),
-                    Icon(
-                      Icons.settings_remote,
-                      size: 64,
-                      color: Theme.of(context).colorScheme.primary,
+                    GestureDetector(
+                      onLongPress: () async {
+                        try {
+                          if (Platform.isAndroid) {
+                            await MyNewPlugin.toggleLight();
+                          } else {
+                            _showUnsupportedPlatformDialog();
+                          }
+                        } on PlatformException catch (e) {
+                          _showFlashlightErrorDialog(
+                            e.message ?? 'Невідома помилка',
+                          );
+                        }
+                      },
+                      child: Icon(
+                        Icons.settings_remote,
+                        size: 64,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                     ),
                     const SizedBox(height: 24),
                     const Text(

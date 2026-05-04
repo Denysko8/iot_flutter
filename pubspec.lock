@@ -424,6 +424,15 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.1.5+1"
+  secret_flashlight_plugin:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: main
+      resolved-ref: "3e5c4103452b3c00cfc28edd4a06d39e40ea0f42"
+      url: "https://github.com/Denysko8/secret_flashlight_plugin.git"
+    source: git
+    version: "0.0.1"
   shared_preferences:
     dependency: "direct main"
     description:
