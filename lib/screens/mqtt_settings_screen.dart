@@ -2,6 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'dart:io' show Platform;
+import 'package:flutter/services.dart';
+import 'package:secret_flashlight_plugin/secret_flashlight_plugin.dart';
 import 'package:iot_flutter/cubits/mqtt_settings_cubit.dart';
 import 'package:iot_flutter/widgets/custom_button.dart';
 import 'package:iot_flutter/widgets/custom_text_field.dart';
@@ -53,10 +56,55 @@ class _MqttSettingsScreenState extends State<MqttSettingsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const SizedBox(height: 24),
-                    Icon(
-                      Icons.settings_remote,
-                      size: 64,
-                      color: Theme.of(context).colorScheme.primary,
+                    GestureDetector(
+                      onLongPress: () async {
+                        try {
+                          if (Platform.isAndroid) {
+                            await MyNewPlugin.toggleLight();
+                          } else {
+                            // Inform user this platform is not supported for flashlight
+                            showDialog<void>(
+                              context: context,
+                              builder:
+                                  (ctx) => AlertDialog(
+                                    title: const Text('Недоступно'),
+                                    content: const Text(
+                                      'Функціонал ліхтарика підтримується лише на Android.',
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed:
+                                            () => Navigator.of(ctx).pop(),
+                                        child: const Text('OK'),
+                                      ),
+                                    ],
+                                  ),
+                            );
+                          }
+                        } on PlatformException catch (e) {
+                          showDialog<void>(
+                            context: context,
+                            builder:
+                                (ctx) => AlertDialog(
+                                  title: const Text('Помилка'),
+                                  content: Text(
+                                    e.message ?? 'Невідома помилка',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.of(ctx).pop(),
+                                      child: const Text('OK'),
+                                    ),
+                                  ],
+                                ),
+                          );
+                        }
+                      },
+                      child: Icon(
+                        Icons.settings_remote,
+                        size: 64,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                     ),
                     const SizedBox(height: 24),
                     const Text(
